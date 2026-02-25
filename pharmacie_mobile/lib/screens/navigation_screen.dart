@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:pharmacie_mobile/screens/home_screen.dart';
+import 'package:pharmacie_mobile/screens/parametres_page.dart';
+import 'package:pharmacie_mobile/screens/vente_page.dart';
 import 'package:pharmacie_mobile/services/api_service.dart';
+import 'package:pharmacie_mobile/screens/clotures_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -12,7 +15,12 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [const HomeScreen()];
+  final List<Widget> _pages = [
+    const HomeScreen(),
+    const CloturePageUsers(),
+    const VentePageUsers(),
+    const ParametresPageUsers(),
+  ];
 
   @override
   void initState() {
@@ -56,28 +64,22 @@ class _MainPageState extends State<MainPage> {
                   index: 0,
                 ),
                 _buildNavItem(
-                  icon: Icons.people_alt_outlined,
-                  selectedIcon: Icons.people_alt,
-                  label: 'Clients',
-                  index: 1,
-                ),
-                _buildNavItem(
                   icon: Icons.receipt_long_outlined,
                   selectedIcon: Icons.receipt_long,
                   label: 'Cloture',
-                  index: 2,
+                  index: 1,
                 ),
                 _buildNavItem(
                   icon: Icons.payment_outlined,
                   selectedIcon: Icons.payment,
                   label: 'Ventes',
-                  index: 3,
+                  index: 2,
                 ),
                 _buildNavItem(
                   icon: Icons.settings_outlined,
-                  selectedIcon: Icons.person,
+                  selectedIcon: Icons.settings,
                   label: 'Paramètres',
-                  index: 4,
+                  index: 3,
                 ),
               ],
             ),
@@ -106,14 +108,14 @@ class _MainPageState extends State<MainPage> {
         children: [
           Icon(
             isSelected ? selectedIcon : icon,
-            color: isSelected ? Colors.blue : Colors.grey,
+            color: isSelected ? Colors.green : Colors.grey,
             size: 24,
           ),
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
-              color: isSelected ? Colors.blue : Colors.grey,
+              color: isSelected ? Colors.green : Colors.grey,
               fontSize: 12,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             ),
@@ -124,7 +126,7 @@ class _MainPageState extends State<MainPage> {
               height: 2,
               width: 20,
               decoration: BoxDecoration(
-                color: Colors.blue,
+                color: Colors.green,
                 borderRadius: BorderRadius.circular(1),
               ),
             ),
