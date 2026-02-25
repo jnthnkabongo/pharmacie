@@ -63,24 +63,38 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        print("Response: $response");
         final rawVentes = List<dynamic>.from(data['ventes'] ?? []);
-
+        print("Raw Ventes: $rawVentes");
         final List<Map<String, dynamic>> mappedVentes = rawVentes.map((v) {
-          final clientName = v['client'] != null
-              ? (v['client']['nom'] ?? 'Client')
+          final clientName = v['client_id'] != null
+              ? (v['client_id'].toString().isNotEmpty
+                    ? v['client_id'].toString()
+                    : 'Anonyme')
               : 'Anonyme';
           final montant = v['montant_total']?.toString() ?? '0';
 
           List details = v['vente_details'] ?? v['venteDetails'] ?? [];
           int qty = 0;
+          List<String> productNames = [];
+
           for (var d in details) {
             qty += (d['quantite'] is num
                 ? (d['quantite'] as num).toInt()
                 : (int.tryParse(d['quantite'].toString()) ?? 0));
+
+            // Get product name if available
+            if (d['produit'] != null && d['produit']['nom'] != null) {
+              productNames.add(d['produit']['nom'].toString());
+            }
           }
-          String productDesc = details.isNotEmpty
-              ? '${details.length} article(s)'
-              : 'Divers';
+
+          String productDesc = productNames.isNotEmpty
+              ? productNames.take(2).join(', ') +
+                    (productNames.length > 2 ? '...' : '')
+              : (details.isNotEmpty
+                    ? '${details.length} article(s)'
+                    : 'Divers');
 
           String dateStr = v['created_at'] != null
               ? v['created_at'].toString().split('T')[0]
@@ -88,7 +102,7 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
 
           return {
             'id': v['id'].toString().padLeft(3, '0'),
-            'client': clientName,
+            'client_id': clientName,
             'produit': productDesc,
             'quantity': qty,
             'price': '$montant FC',
@@ -135,7 +149,7 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
 
     for (var v in _ventes) {
       _totalRevenu += v['raw_amount'] as double;
-      uniqueClients.add(v['client'] as String);
+      uniqueClients.add(v['client_id'] as String);
     }
     _totalClients = uniqueClients.length;
   }
@@ -147,7 +161,7 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
       } else {
         final lowerQuery = query.toLowerCase();
         _filteredVentes = _ventes.where((v) {
-          return v['client'].toString().toLowerCase().contains(lowerQuery) ||
+          return v['client_id'].toString().toLowerCase().contains(lowerQuery) ||
               v['produit'].toString().toLowerCase().contains(lowerQuery) ||
               v['id'].toString().toLowerCase().contains(lowerQuery);
         }).toList();
@@ -275,7 +289,7 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                         return AnimatedContainer(
                           duration: Duration(milliseconds: 300 + (index * 100)),
                           curve: Curves.easeOut,
-                          margin: const EdgeInsets.only(bottom: 16),
+                          margin: const EdgeInsets.only(bottom: 6),
                           transform: Matrix4.translationValues(0, 0, 0),
                           child: Card(
                             elevation: 8,
@@ -293,9 +307,9 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                                 ),
                               ),
                               child: ListTile(
-                                contentPadding: const EdgeInsets.all(16),
+                                contentPadding: const EdgeInsets.all(8),
                                 leading: Container(
-                                  padding: const EdgeInsets.all(12),
+                                  padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
                                     color: Colors.green.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(12),
@@ -303,11 +317,12 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                                   child: const Icon(
                                     Icons.check_circle,
                                     color: Colors.green,
-                                    size: 24,
+                                    size: 18,
                                   ),
                                 ),
                                 title: Text(
-                                  venteItem['client'],
+                                  "Client : ${venteItem['client_id']}",
+                                  // venteItem['client_id'],
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
@@ -317,7 +332,7 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                                 subtitle: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const SizedBox(height: 4),
+                                    const SizedBox(height: 2),
                                     Row(
                                       children: [
                                         Icon(
@@ -325,10 +340,10 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                                           size: 14,
                                           color: Colors.grey[600],
                                         ),
-                                        const SizedBox(width: 4),
+                                        const SizedBox(width: 2),
                                         Expanded(
                                           child: Text(
-                                            '${venteItem['produit']} - ${venteItem['quantity']} unité(s)',
+                                            "Produit : ${venteItem['produit']} - ${venteItem['quantity']} unité(s)",
                                             style: TextStyle(
                                               color: Colors.grey[600],
                                               fontSize: 14,
@@ -337,7 +352,7 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(height: 4),
+                                    const SizedBox(height: 2),
                                     Row(
                                       children: [
                                         Icon(
@@ -345,7 +360,7 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                                           size: 14,
                                           color: Colors.grey[600],
                                         ),
-                                        const SizedBox(width: 4),
+                                        const SizedBox(width: 2),
                                         Text(
                                           venteItem['date'],
                                           style: TextStyle(
@@ -365,11 +380,11 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                                       venteItem['price'],
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 16,
+                                        fontSize: 14,
                                         color: Color(0xFF2E7D32),
                                       ),
                                     ),
-                                    const SizedBox(height: 4),
+                                    const SizedBox(height: 2),
                                     Container(
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 8,
@@ -383,7 +398,7 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                                         venteItem['status'],
                                         style: const TextStyle(
                                           color: Colors.white,
-                                          fontSize: 11,
+                                          fontSize: 12,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
@@ -697,7 +712,7 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                       '#${vente['id']}',
                       Icons.receipt,
                     ),
-                    _buildDetailRow('Client', vente['client'], Icons.person),
+                    _buildDetailRow('Client', vente['client_id'], Icons.person),
                     _buildDetailRow(
                       'Produit',
                       vente['produit'],

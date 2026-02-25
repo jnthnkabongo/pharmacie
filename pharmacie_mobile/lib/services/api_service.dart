@@ -203,6 +203,7 @@ class ApiService {
   // Récupérer les ventes
   static Future<http.Response> getVentes() async {
     return await authenticatedRequest('/liste-ventes', 'GET');
+    
   }
 
   // Récupérer l'historique

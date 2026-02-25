@@ -329,7 +329,7 @@ class ApiController extends Controller
         $this->addHistorique('Accès à la liste des ventes');
 
         // Logique pour récupérer les ventes
-        $ventes = Vente::with('client', 'vendeur', 'venteDetails')->where('pharmacie_id', $user->pharmacie_id)->get();
+        $ventes = Vente::with('client', 'vendeur', 'venteDetails.produit')->where('pharmacie_id', $user->pharmacie_id)->get();
         return response()->json([
             'message' => 'Liste des ventes',
             'ventes' => $ventes, // À remplacer par la vraie logique
