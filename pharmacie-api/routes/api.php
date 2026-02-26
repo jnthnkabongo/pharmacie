@@ -32,5 +32,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/liste-ventes', [ApiController::class, 'getVentes']);
     Route::get('users', [ApiController::class, 'getUsers']);
     Route::post('/add-vente', [ApiController::class, 'addVente']);
+    
+    // Routes approvisionnement
+    Route::get('/liste-approvisionnements', [ApiController::class, 'getApprovisionnements']);
+    Route::get('/liste-fournisseurs', [ApiController::class, 'getFournisseurs']);
+    Route::post('/add-approvisionnement', [ApiController::class, 'addApprovisionnement']);
+    Route::post('/add-fournisseur', [ApiController::class, 'addFournisseur']);
+    Route::delete('/delete-approvisionnement/{id}', [ApiController::class, 'deleteApprovisionnement']);
 });
 

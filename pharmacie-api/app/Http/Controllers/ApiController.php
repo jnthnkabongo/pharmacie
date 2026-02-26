@@ -438,4 +438,228 @@ class ApiController extends Controller
             ], 500);
         }
     }
+
+    // ==================== CRUD APPROVISIONNEMENT ====================
+
+    //Liste des approvisionnements
+    public function getApprovisionnements()
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Utilisateur non identifié'
+            ], 401);
+        }
+        
+        $this->addHistorique('Accès à la liste des approvisionnements');
+
+        $approvisionnements = Approvisionnement::with('fournisseur', 'user', 'approvisionnementDetails.produit')
+            ->where('pharmacie_id', $user->pharmacie_id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        return response()->json([
+            'message' => 'Liste des approvisionnements',
+            'approvisionnements' => $approvisionnements,
+            'total' => $approvisionnements->count(),
+        ], 200);
+    }
+
+    //Liste des fournisseurs
+    public function getFournisseurs()
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Utilisateur non identifié'
+            ], 401);
+        }
+        
+        $this->addHistorique('Accès à la liste des fournisseurs');
+
+        $fournisseurs = Fournisseur::where('pharmacie_id', $user->pharmacie_id)
+            ->orderBy('nom', 'asc')
+            ->get();
+            
+        return response()->json([
+            'message' => 'Liste des fournisseurs',
+            'fournisseurs' => $fournisseurs,
+        ], 200);
+    }
+
+    //Ajout d'un approvisionnement
+    public function addApprovisionnement(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Utilisateur non identifié'
+            ], 401);
+        }
+
+        $request->validate([
+            'fournisseur_id' => 'required|exists:fournisseurs,id',
+            'montant_total' => 'required|numeric',
+            'articles' => 'required|array',
+            'articles.*.produit_id' => 'required|exists:produits,id',
+            'articles.*.quantite' => 'required|integer|min:1',
+            'articles.*.prix_achat' => 'required|numeric|min:0',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $approvisionnement = Approvisionnement::create([
+                'fournisseur_id' => $request->fournisseur_id,
+                'user_id' => $user->id,
+                'montant_total' => $request->montant_total,
+                'pharmacie_id' => $user->pharmacie_id,
+            ]);
+
+            foreach ($request->articles as $article) {
+                // Création du détail d'approvisionnement
+                ApprovisionnementDetail::create([
+                    'approvisionnement_id' => $approvisionnement->id,
+                    'produit_id' => $article['produit_id'],
+                    'quantite' => $article['quantite'],
+                    'prix_achat' => $article['prix_achat'],
+                    'total' => $article['quantite'] * $article['prix_achat'],
+                ]);
+
+                // Mise à jour du stock
+                $stock = Stock::where('produit_id', $article['produit_id'])->first();
+                if ($stock) {
+                    $stock->quantite += $article['quantite'];
+                    $stock->save();
+                } else {
+                    // Créer le stock s'il n'existe pas
+                    Stock::create([
+                        'produit_id' => $article['produit_id'],
+                        'quantite' => $article['quantite'],
+                        'seuil_alerte' => 10, // Valeur par défaut
+                    ]);
+                }
+
+                // Création du mouvement de stock (entrée)
+                MouvementStock::create([
+                    'pharmacie_id' => $user->pharmacie_id,
+                    'produit_id' => $article['produit_id'],
+                    'type' => 'entree',
+                    'quantite' => $article['quantite'],
+                    'reference' => 'Approvisionnement_#' . $approvisionnement->id,
+                    'user_id' => $user->id,
+                ]);
+            }
+
+            DB::commit();
+            $this->addHistorique('Ajout d\'un approvisionnement #' . $approvisionnement->id);
+
+            // Recharger l'approvisionnement avec ses relations pour la réponse
+            $approvisionnement->load('fournisseur', 'user', 'approvisionnementDetails.produit');
+
+            return response()->json([
+                'message' => 'Approvisionnement ajouté avec succès',
+                'approvisionnement' => $approvisionnement,
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Erreur lors de l\'approvisionnement: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    //Suppression d'un approvisionnement
+    public function deleteApprovisionnement($id)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Utilisateur non identifié'
+            ], 401);
+        }
+
+        $approvisionnement = Approvisionnement::where('id', $id)
+            ->where('pharmacie_id', $user->pharmacie_id)
+            ->first();
+
+        if (!$approvisionnement) {
+            return response()->json([
+                'message' => 'Approvisionnement non trouvé'
+            ], 404);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Annuler les mouvements de stock
+            foreach ($approvisionnement->approvisionnementDetails as $detail) {
+                $stock = Stock::where('produit_id', $detail->produit_id)->first();
+                if ($stock) {
+                    $stock->quantite -= $detail->quantite;
+                    $stock->save();
+                }
+
+                // Supprimer le mouvement de stock correspondant
+                MouvementStock::where('reference', 'Approvisionnement_#' . $approvisionnement->id)
+                    ->where('produit_id', $detail->produit_id)
+                    ->delete();
+            }
+
+            // Supprimer les détails puis l'approvisionnement
+            $approvisionnement->approvisionnementDetails()->delete();
+            $approvisionnement->delete();
+
+            DB::commit();
+            $this->addHistorique('Suppression de l\'approvisionnement #' . $id);
+
+            return response()->json([
+                'message' => 'Approvisionnement supprimé avec succès'
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Erreur lors de la suppression: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    //Ajout d'un fournisseur
+    public function addFournisseur(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Utilisateur non identifié'
+            ], 401);
+        }
+
+        $request->validate([
+            'nom' => 'required|string|max:150',
+            'telephone' => 'nullable|string|max:20',
+            'adresse' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:150',
+        ]);
+
+        $fournisseur = Fournisseur::create([
+            'nom' => $request->nom,
+            'telephone' => $request->telephone,
+            'adresse' => $request->adresse,
+            'email' => $request->email,
+        ]);
+
+        $this->addHistorique('Ajout du fournisseur: ' . $fournisseur->nom);
+
+        return response()->json([
+            'message' => 'Fournisseur ajouté avec succès',
+            'fournisseur' => $fournisseur,
+        ], 201);
+    }
 }

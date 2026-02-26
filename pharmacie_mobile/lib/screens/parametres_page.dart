@@ -185,17 +185,6 @@ class _ParametresPagePageState extends State<ParametresPageUsers> {
                   // TODO: Import/Export
                 },
               ),
-              _buildModernSettingTile(
-                'Journal d\'audit',
-                'Historique des actions',
-                Icons.history,
-                Colors.green,
-                () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => const AuditPage()),
-                  );
-                },
-              ),
             ]),
           ),
 

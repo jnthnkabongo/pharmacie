@@ -3,7 +3,7 @@ import 'package:pharmacie_mobile/screens/home_screen.dart';
 import 'package:pharmacie_mobile/screens/parametres_page.dart';
 import 'package:pharmacie_mobile/screens/vente_page.dart';
 import 'package:pharmacie_mobile/services/api_service.dart';
-import 'package:pharmacie_mobile/screens/clotures_page.dart';
+import 'package:pharmacie_mobile/screens/approvisionnement_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -17,7 +17,7 @@ class _MainPageState extends State<MainPage> {
 
   final List<Widget> _pages = [
     const HomeScreen(),
-    const CloturePageUsers(),
+    const ApprovisionnementPage(),
     const VentePageUsers(),
     const ParametresPageUsers(),
   ];
@@ -64,9 +64,9 @@ class _MainPageState extends State<MainPage> {
                   index: 0,
                 ),
                 _buildNavItem(
-                  icon: Icons.receipt_long_outlined,
-                  selectedIcon: Icons.receipt_long,
-                  label: 'Cloture',
+                  icon: Icons.inventory_outlined,
+                  selectedIcon: Icons.inventory,
+                  label: 'Approvisionnements',
                   index: 1,
                 ),
                 _buildNavItem(

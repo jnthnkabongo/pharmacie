@@ -203,7 +203,6 @@ class ApiService {
   // Récupérer les ventes
   static Future<http.Response> getVentes() async {
     return await authenticatedRequest('/liste-ventes', 'GET');
-    
   }
 
   // Récupérer l'historique
@@ -219,5 +218,53 @@ class ApiService {
   // Récupérer les utilisateurs
   static Future<http.Response> getUsers() async {
     return await authenticatedRequest('/users', 'GET');
+  }
+
+  // ==================== APPROVISIONNEMENT ====================
+
+  // Récupérer les approvisionnements
+  static Future<http.Response> getApprovisionnements() async {
+    return await authenticatedRequest('/liste-approvisionnements', 'GET');
+  }
+
+  // Récupérer les fournisseurs
+  static Future<http.Response> getFournisseurs() async {
+    return await authenticatedRequest('/liste-fournisseurs', 'GET');
+  }
+
+  // Ajouter un approvisionnement
+  static Future<http.Response> addApprovisionnement(
+    Map<String, dynamic> approvisionnementData,
+  ) async {
+    return await authenticatedRequest(
+      '/add-approvisionnement',
+      'POST',
+      body: approvisionnementData,
+    );
+  }
+
+  // Ajouter un fournisseur
+  static Future<http.Response> addFournisseur(
+    Map<String, dynamic> fournisseurData,
+  ) async {
+    return await authenticatedRequest(
+      '/add-fournisseur',
+      'POST',
+      body: fournisseurData,
+    );
+  }
+
+  // Supprimer un approvisionnement
+  static Future<http.Response> deleteApprovisionnement(String id) async {
+    final token = await getToken();
+
+    final headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+
+    final uri = Uri.parse('$baseUrl/delete-approvisionnement/$id');
+    return await http.delete(uri, headers: headers);
   }
 }
