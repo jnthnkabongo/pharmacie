@@ -98,8 +98,8 @@ class _ParametresPagePageState extends State<ParametresPageUsers> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Jonathan Kabongo',
+                        Text(
+                          _userInfo!['name'] ?? 'Jonathan Kabongo',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -108,7 +108,7 @@ class _ParametresPagePageState extends State<ParametresPageUsers> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'jnthnkabongo@gmail.com',
+                          'Nom : ${_userInfo!['nom'] ?? 'N/A'}',
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.8),
                             fontSize: 14,

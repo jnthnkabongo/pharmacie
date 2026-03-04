@@ -174,8 +174,11 @@ class _ProduitPageState extends State<ProduitPage>
                 // TODO: Ajouter un produit
               },
               backgroundColor: Colors.green,
-              icon: const Icon(Icons.add, size: 20),
-              label: const Text('Ajouter', style: TextStyle(fontSize: 12)),
+              icon: const Icon(Icons.add, size: 20, color: Colors.white),
+              label: const Text(
+                'Ajouter',
+                style: TextStyle(fontSize: 12, color: Colors.white),
+              ),
             ),
             const SizedBox(height: 8),
             FloatingActionButton.extended(
@@ -186,9 +189,16 @@ class _ProduitPageState extends State<ProduitPage>
                 _animationController.reverse();
                 // TODO: Importer des produits
               },
-              backgroundColor: Colors.blue,
-              icon: const Icon(Icons.upload_file, size: 20),
-              label: const Text('Importer', style: TextStyle(fontSize: 12)),
+              backgroundColor: Colors.green,
+              icon: const Icon(
+                Icons.upload_file,
+                size: 20,
+                color: Colors.white,
+              ),
+              label: const Text(
+                'Exporter',
+                style: TextStyle(fontSize: 12, color: Colors.white),
+              ),
             ),
             const SizedBox(height: 8),
             FloatingActionButton.extended(
@@ -199,9 +209,12 @@ class _ProduitPageState extends State<ProduitPage>
                 _animationController.reverse();
                 // TODO: Exporter des produits
               },
-              backgroundColor: Colors.orange,
-              icon: const Icon(Icons.download, size: 20),
-              label: const Text('Exporter', style: TextStyle(fontSize: 12)),
+              backgroundColor: Colors.green,
+              icon: const Icon(Icons.download, size: 20, color: Colors.white),
+              label: const Text(
+                'Importer',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
             const SizedBox(height: 16),
           ],

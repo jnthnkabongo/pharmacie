@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:pharmacie_mobile/auth/login.dart';
 import 'package:pharmacie_mobile/screens_admin/audit_page_improved.dart';
 import 'package:pharmacie_mobile/screens_admin/notification_page.dart';
 import 'package:pharmacie_mobile/screens_admin/users_page.dart';
+import 'package:pharmacie_mobile/services/api_service.dart';
 
 class ParametresPage extends StatefulWidget {
   const ParametresPage({super.key});
@@ -11,6 +13,30 @@ class ParametresPage extends StatefulWidget {
 }
 
 class _ParametresPagePageState extends State<ParametresPage> {
+  Map<String, dynamic>? _userInfo;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo();
+  }
+
+  Future<void> _loadUserInfo() async {
+    final userInfo = await ApiService.getUserInfo();
+    setState(() {
+      _userInfo = userInfo;
+    });
+  }
+
+  Future<void> _logout() async {
+    await ApiService.logout();
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,8 +99,8 @@ class _ParametresPagePageState extends State<ParametresPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Jonathan Kabongo',
+                        Text(
+                          '${_userInfo?['name'] ?? 'Utilisateur'}',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -83,7 +109,7 @@ class _ParametresPagePageState extends State<ParametresPage> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'jnthnkabongo@gmail.com',
+                          'Nom: ${_userInfo?['nom'] ?? 'N/A'}',
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.8),
                             fontSize: 14,
@@ -109,17 +135,13 @@ class _ParametresPagePageState extends State<ParametresPage> {
             ),
           ),
 
-          // Section Pharmacie
-          SliverToBoxAdapter(
-            child: _buildSectionHeader('Pharmacie', Icons.store),
-          ),
           SliverList(
             delegate: SliverChildListDelegate([
               _buildModernSettingTile(
                 'Informations',
                 'Nom, adresse, téléphone',
                 Icons.info,
-                Colors.blue,
+                Colors.green,
                 () {
                   // TODO: Modifier infos pharmacie
                 },
@@ -127,17 +149,13 @@ class _ParametresPagePageState extends State<ParametresPage> {
             ]),
           ),
 
-          // Section Utilisateurs
-          SliverToBoxAdapter(
-            child: _buildSectionHeader('Utilisateurs', Icons.people),
-          ),
           SliverList(
             delegate: SliverChildListDelegate([
               _buildModernSettingTile(
                 'Rôles et permissions',
                 'Configurer les accès',
                 Icons.admin_panel_settings,
-                Colors.red,
+                Colors.green,
                 () {
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (context) => const UsersPage()),
@@ -147,17 +165,13 @@ class _ParametresPagePageState extends State<ParametresPage> {
             ]),
           ),
 
-          // Section Système
-          SliverToBoxAdapter(
-            child: _buildSectionHeader('Système', Icons.computer),
-          ),
           SliverList(
             delegate: SliverChildListDelegate([
               _buildModernSettingTile(
                 'Sauvegarde',
                 'Backup et restauration',
                 Icons.backup,
-                Colors.indigo,
+                Colors.green,
                 () {
                   // TODO: Sauvegarde
                 },
@@ -166,7 +180,7 @@ class _ParametresPagePageState extends State<ParametresPage> {
                 'Import/Export',
                 'Importer et exporter des données',
                 Icons.swap_horiz,
-                Colors.teal,
+                Colors.green,
                 () {
                   // TODO: Import/Export
                 },
@@ -175,7 +189,7 @@ class _ParametresPagePageState extends State<ParametresPage> {
                 'Journal d\'audit',
                 'Historique des actions',
                 Icons.history,
-                Colors.amber,
+                Colors.green,
                 () {
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (context) => const AuditPage()),
@@ -185,17 +199,13 @@ class _ParametresPagePageState extends State<ParametresPage> {
             ]),
           ),
 
-          // Section Notifications
-          SliverToBoxAdapter(
-            child: _buildSectionHeader('Notifications', Icons.notifications),
-          ),
           SliverList(
             delegate: SliverChildListDelegate([
               _buildModernSettingTile(
                 'Notification & Alertes de stock',
                 'Configurer les seuils',
                 Icons.notifications_active,
-                Colors.deepOrange,
+                Colors.green,
                 () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -207,17 +217,13 @@ class _ParametresPagePageState extends State<ParametresPage> {
             ]),
           ),
 
-          // Section À propos
-          SliverToBoxAdapter(
-            child: _buildSectionHeader('À propos', Icons.info_outline),
-          ),
           SliverList(
             delegate: SliverChildListDelegate([
               _buildModernSettingTile(
                 'Version',
                 '1.0.0',
                 Icons.info_outline,
-                Colors.grey,
+                Colors.green,
                 () {
                   // TODO: Informations version
                 },
@@ -226,7 +232,7 @@ class _ParametresPagePageState extends State<ParametresPage> {
                 'Aide',
                 'Documentation et support',
                 Icons.help,
-                Colors.cyan,
+                Colors.green,
                 () {
                   // TODO: Aide et support
                 },
@@ -394,7 +400,7 @@ class _ParametresPagePageState extends State<ParametresPage> {
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.of(context).pop();
+              _logout();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
