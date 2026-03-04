@@ -232,23 +232,83 @@ class _AjouterProduitState extends State<AjouterProduit> {
                       maxLines: 3,
                     ),
                     const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _prixAchatController,
+                            decoration: const InputDecoration(
+                              labelText: 'Prix d\'achat (FC)',
+                              prefixIcon: Icon(Icons.shopping_cart),
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Veuillez entrer le prix d\'achat';
+                              }
+                              final prix = double.tryParse(value);
+                              if (prix == null || prix < 0) {
+                                return 'Prix d\'achat invalide';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _prixVenteController,
+                            decoration: const InputDecoration(
+                              labelText: 'Prix de vente (FC) *',
+                              prefixIcon: Icon(Icons.attach_money),
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Veuillez entrer le prix de vente';
+                              }
+                              final prix = double.tryParse(value);
+                              if (prix == null || prix <= 0) {
+                                return 'Prix de vente invalide';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
                     TextFormField(
-                      controller: _prixController,
+                      controller: _codeBarreController,
                       decoration: const InputDecoration(
-                        labelText: 'Prix de vente (FC) *',
-                        prefixIcon: Icon(Icons.attach_money),
+                        labelText: 'Code barre',
+                        prefixIcon: Icon(Icons.qr_code),
                         border: OutlineInputBorder(),
                       ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Veuillez entrer le prix';
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _dateExpirationController,
+                      decoration: const InputDecoration(
+                        labelText: 'Date d\'expiration',
+                        prefixIcon: Icon(Icons.calendar_today),
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.datetime,
+                      onTap: () async {
+                        DateTime? pickedDate = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime(2100),
+                        );
+                        if (pickedDate != null) {
+                          _dateExpirationController.text = pickedDate
+                              .toString()
+                              .split(' ')[0];
                         }
-                        final prix = double.tryParse(value);
-                        if (prix == null || prix <= 0) {
-                          return 'Prix invalide';
-                        }
-                        return null;
                       },
                     ),
                   ],

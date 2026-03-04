@@ -677,11 +677,14 @@ class ApiController extends Controller
         $request->validate([
             'nom' => 'required|string|max:150',
             'description' => 'nullable|string',
-            'prix' => 'required|numeric|min:0',
+            'prix_achat' => 'nullable|numeric|min:0',
+            'prix_vente' => 'required|numeric|min:0',
             'quantite' => 'required|integer|min:0',
             'seuil_alerte' => 'nullable|integer|min:0',
             'categorie_id' => 'nullable|exists:categories,id',
             'fournisseur_id' => 'nullable|exists:fournisseurs,id',
+            'code_barre' => 'nullable|string|max:50',
+            'date_expiration' => 'nullable|date',
         ]);
 
         try {
@@ -690,10 +693,13 @@ class ApiController extends Controller
             $produit = Produit::create([
                 'nom' => $request->nom,
                 'description' => $request->description,
-                'prix' => $request->prix,
+                'prix_achat' => $request->prix_achat,
+                'prix_vente' => $request->prix_vente,
                 'categorie_id' => $request->categorie_id,
                 'fournisseur_id' => $request->fournisseur_id,
                 'pharmacie_id' => $user->pharmacie_id,
+                'code_barre' => $request->code_barre,
+                'date_expiration' => $request->date_expiration,
             ]);
 
             // Créer le stock initial
