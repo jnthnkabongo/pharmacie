@@ -20,7 +20,7 @@ class _AjouterApprovisionnementState extends State<AjouterApprovisionnement> {
   List<Map<String, dynamic>> _produits = [];
 
   // Articles dans l'approvisionnement
-  List<Map<String, dynamic>> _articles = [];
+  final List<Map<String, dynamic>> _articles = [];
 
   @override
   void initState() {
@@ -235,7 +235,7 @@ class _AjouterApprovisionnementState extends State<AjouterApprovisionnement> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                      value: _selectedFournisseur,
+                      initialValue: _selectedFournisseur,
                       decoration: const InputDecoration(
                         labelText: 'Sélectionner un fournisseur',
                         prefixIcon: Icon(Icons.business),
@@ -302,7 +302,7 @@ class _AjouterApprovisionnementState extends State<AjouterApprovisionnement> {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF1976D2),
+                            color: Color(0xFF2E7D32),
                           ),
                         ),
                         ElevatedButton.icon(
@@ -310,7 +310,7 @@ class _AjouterApprovisionnementState extends State<AjouterApprovisionnement> {
                           icon: const Icon(Icons.add),
                           label: const Text('Ajouter'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF1976D2),
+                            backgroundColor: const Color(0xFF2E7D32),
                             foregroundColor: Colors.white,
                           ),
                         ),
@@ -321,7 +321,7 @@ class _AjouterApprovisionnementState extends State<AjouterApprovisionnement> {
                       final index = entry.key;
                       final article = entry.value;
                       return _buildArticleCard(index, article);
-                    }).toList(),
+                    }),
                   ],
                 ),
               ),
@@ -333,12 +333,12 @@ class _AjouterApprovisionnementState extends State<AjouterApprovisionnement> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF1976D2), Color(0xFF42A5F5)],
+                    colors: [Color(0xFF2E7D32), Color(0xFF2E7D32)],
                   ),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.blue.withOpacity(0.3),
+                      color: Colors.green.withOpacity(0.3),
                       blurRadius: 15,
                       offset: const Offset(0, 8),
                     ),
@@ -375,7 +375,7 @@ class _AjouterApprovisionnementState extends State<AjouterApprovisionnement> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _submitApprovisionnement,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1976D2),
+                    backgroundColor: const Color(0xFF2E7D32),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
@@ -418,7 +418,7 @@ class _AjouterApprovisionnementState extends State<AjouterApprovisionnement> {
                 'Article ${index + 1}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1976D2),
+                  color: Color(0xFF2E7D32),
                 ),
               ),
               if (_articles.length > 1)
@@ -430,7 +430,7 @@ class _AjouterApprovisionnementState extends State<AjouterApprovisionnement> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: article['produit_id'],
+            initialValue: article['produit_id'],
             decoration: const InputDecoration(
               labelText: 'Produit',
               prefixIcon: Icon(Icons.medication),
@@ -533,7 +533,7 @@ class _AjouterApprovisionnementState extends State<AjouterApprovisionnement> {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1976D2),
+                  color: Color(0xFF2E7D32),
                 ),
               ),
               const SizedBox(height: 20),
@@ -640,7 +640,7 @@ class _AjouterApprovisionnementState extends State<AjouterApprovisionnement> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1976D2),
+                        backgroundColor: const Color(0xFF2E7D32),
                         foregroundColor: Colors.white,
                       ),
                       child: const Text('Ajouter'),
