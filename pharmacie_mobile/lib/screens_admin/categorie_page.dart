@@ -28,14 +28,15 @@ class _CategoriePageState extends State<CategoriePage> {
     });
 
     try {
-      final responese = await ApiService.getCategories();
-      if (responese.statusCode == 200) {
-        final data = jsonDecode(responese.body);
+      final response = await ApiService.getCategories();
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
         setState(() {
           _categories = List<Map<String, dynamic>>.from(
             data['categories'] ?? [],
           );
           _filteredCategories = _categories;
+          _isLoading = false;
         });
       } else {
         setState(() {
@@ -44,13 +45,16 @@ class _CategoriePageState extends State<CategoriePage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Erreur: ${responese.statusCode}'),
+              content: Text('Erreur: ${response.statusCode}'),
               backgroundColor: Colors.red,
             ),
           );
         }
       }
     } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Erreur: $e'), backgroundColor: Colors.red),
@@ -124,45 +128,136 @@ class _CategoriePageState extends State<CategoriePage> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // TODO: Ajouter une catégorie
+        },
+        backgroundColor: const Color(0xFF2E7D32),
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
     );
   }
 
   Widget _buildCategoryCard(Map<String, dynamic> category) {
+    final id = category['id']?.toString() ?? '0';
     final name = category['nom']?.toString() ?? 'Inconnu';
     final description = category['description']?.toString() ?? '';
-    final isActive = category['actif'] == 1 || category['actif'] == true;
+    final createdAt = category['created_at']?.toString() ?? '';
+
+    // Formater la date
+    String formattedDate = '';
+    if (createdAt.isNotEmpty) {
+      try {
+        final dateTime = DateTime.parse(createdAt);
+        formattedDate =
+            '${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year}';
+      } catch (e) {
+        formattedDate = createdAt.split('T')[0]; // Fallback
+      }
+    }
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: isActive ? Colors.green : Colors.grey,
-          child: Icon(
-            isActive ? Icons.category : Icons.category_outlined,
-            color: Colors.white,
-            size: 20,
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            colors: [Colors.white, const Color(0xFFF5F7FA)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
         ),
-        title: Text(name),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(description),
-            const SizedBox(height: 4),
-            Text(
-              'Statut: ${isActive ? 'Actif' : 'Inactif'}',
-              style: TextStyle(
-                color: isActive ? Colors.green : Colors.grey,
-                fontSize: 12,
+        child: ListTile(
+          contentPadding: const EdgeInsets.all(8),
+          leading: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF2E7D32), Color(0xFF43A047)],
               ),
+              borderRadius: BorderRadius.circular(25),
             ),
-          ],
-        ),
-        trailing: IconButton(
-          icon: const Icon(Icons.edit),
-          onPressed: () {
-            // TODO: Implémenter la modification de catégorie
-          },
+            child: const Icon(Icons.check, color: Colors.white, size: 16),
+          ),
+          title: Text(
+            name,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1F2937),
+            ),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 4),
+              if (description.isNotEmpty)
+                Text(
+                  description,
+                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              // const SizedBox(height: 8),
+              // Row(
+              //   children: [
+              //     Icon(Icons.calendar_today, size: 14, color: Colors.grey[500]),
+              //     const SizedBox(width: 4),
+              //     Text(
+              //       'Créé le $formattedDate',
+              //       style: TextStyle(color: Colors.grey[500], fontSize: 12),
+              //     ),
+              //   ],
+              // ),
+            ],
+          ),
+          trailing: PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'edit',
+                child: Row(
+                  children: [
+                    Icon(Icons.edit, size: 18),
+                    SizedBox(width: 8),
+                    Text('Modifier'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete, size: 18, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text('Supprimer', style: TextStyle(color: Colors.red)),
+                  ],
+                ),
+              ),
+            ],
+            onSelected: (value) {
+              if (value == 'edit') {
+                // TODO: Implémenter la modification de catégorie
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Modification à implémenter'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+              } else if (value == 'delete') {
+                // TODO: Implémenter la suppression de catégorie
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Suppression à implémenter'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+              }
+            },
+          ),
         ),
       ),
     );
