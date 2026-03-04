@@ -724,4 +724,25 @@ class ApiController extends Controller
             ], 500);
         }
     }
+
+    //Liste des catégories
+    public function getCategories()
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Utilisateur non identifié'
+            ], 401);
+        }
+        
+        $this->addHistorique('Accès à la liste des catégories');
+
+        $categories = Categorie::orderBy('nom', 'asc')->get();
+            
+        return response()->json([
+            'message' => 'Liste des catégories',
+            'categories' => $categories,
+        ], 200);
+    }
 }

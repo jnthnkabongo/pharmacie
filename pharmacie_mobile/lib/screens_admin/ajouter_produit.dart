@@ -37,15 +37,15 @@ class _AjouterProduitState extends State<AjouterProduit> {
 
   Future<void> _loadCategories() async {
     try {
-      // Pour l'instant, utilisons des catégories par défaut
-      setState(() {
-        _categories = [
-          {'id': '1', 'nom': 'Médicaments'},
-          {'id': '2', 'nom': 'Parapharmacie'},
-          {'id': '3', 'nom': 'Produits d\'hygiène'},
-          {'id': '4', 'nom': 'Équipements médicaux'},
-        ];
-      });
+      final response = await ApiService.getCategories();
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _categories = List<Map<String, dynamic>>.from(
+            data['categories'] ?? [],
+          );
+        });
+      }
     } catch (e) {
       print('Erreur chargement catégories: $e');
     }

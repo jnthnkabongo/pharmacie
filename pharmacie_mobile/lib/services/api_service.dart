@@ -278,4 +278,9 @@ class ApiService {
       body: produitData,
     );
   }
+
+  // Récupérer les catégories
+  static Future<http.Response> getCategories() async {
+    return await authenticatedRequest('/liste-categories', 'GET');
+  }
 }
