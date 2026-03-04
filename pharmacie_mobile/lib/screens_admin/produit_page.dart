@@ -11,7 +11,7 @@ class ProduitPage extends StatefulWidget {
 }
 
 class _ProduitPageState extends State<ProduitPage>
-    with TickerProviderStateMixin {
+  with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   bool _isFabExpanded = false;
   late AnimationController _animationController;

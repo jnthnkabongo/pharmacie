@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pharmacie_mobile/auth/login.dart';
 import 'package:pharmacie_mobile/screens_admin/audit_page_improved.dart';
+import 'package:pharmacie_mobile/screens_admin/categorie_page.dart';
 import 'package:pharmacie_mobile/screens_admin/notification_page.dart';
 import 'package:pharmacie_mobile/screens_admin/users_page.dart';
 import 'package:pharmacie_mobile/services/api_service.dart';
@@ -159,6 +160,19 @@ class _ParametresPagePageState extends State<ParametresPage> {
                 () {
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (context) => const UsersPage()),
+                  );
+                },
+              ),
+              _buildModernSettingTile(
+                'Catégories des produits ',
+                'Configurer les catégories des produits',
+                Icons.check_box,
+                Colors.green,
+                () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const CategoriePage(),
+                    ),
                   );
                 },
               ),
