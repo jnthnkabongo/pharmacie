@@ -267,4 +267,15 @@ class ApiService {
     final uri = Uri.parse('$baseUrl/delete-approvisionnement/$id');
     return await http.delete(uri, headers: headers);
   }
+
+  // Ajouter un produit
+  static Future<http.Response> addProduit(
+    Map<String, dynamic> produitData,
+  ) async {
+    return await authenticatedRequest(
+      '/add-produit',
+      'POST',
+      body: produitData,
+    );
+  }
 }

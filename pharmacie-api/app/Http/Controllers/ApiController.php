@@ -662,4 +662,60 @@ class ApiController extends Controller
             'fournisseur' => $fournisseur,
         ], 201);
     }
+
+    //Ajout d'un produit
+    public function addProduit(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Utilisateur non identifié'
+            ], 401);
+        }
+
+        $request->validate([
+            'nom' => 'required|string|max:150',
+            'description' => 'nullable|string',
+            'prix' => 'required|numeric|min:0',
+            'quantite' => 'required|integer|min:0',
+            'seuil_alerte' => 'nullable|integer|min:0',
+            'categorie_id' => 'nullable|exists:categories,id',
+            'fournisseur_id' => 'nullable|exists:fournisseurs,id',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $produit = Produit::create([
+                'nom' => $request->nom,
+                'description' => $request->description,
+                'prix' => $request->prix,
+                'categorie_id' => $request->categorie_id,
+                'fournisseur_id' => $request->fournisseur_id,
+                'pharmacie_id' => $user->pharmacie_id,
+            ]);
+
+            // Créer le stock initial
+            Stock::create([
+                'produit_id' => $produit->id,
+                'quantite' => $request->quantite,
+                'seuil_alerte' => $request->seuil_alerte ?? 10,
+            ]);
+
+            DB::commit();
+            $this->addHistorique('Ajout du produit: ' . $produit->nom);
+
+            return response()->json([
+                'message' => 'Produit ajouté avec succès',
+                'produit' => $produit,
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Erreur lors de l\'ajout du produit: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

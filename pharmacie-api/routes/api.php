@@ -39,5 +39,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/add-approvisionnement', [ApiController::class, 'addApprovisionnement']);
     Route::post('/add-fournisseur', [ApiController::class, 'addFournisseur']);
     Route::delete('/delete-approvisionnement/{id}', [ApiController::class, 'deleteApprovisionnement']);
+    
+    // Routes produits
+    Route::post('/add-produit', [ApiController::class, 'addProduit']);
 });
 

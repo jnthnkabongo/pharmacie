@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pharmacie_mobile/services/api_service.dart';
 import 'dart:convert';
+import 'package:pharmacie_mobile/screens_admin/ajouter_produit.dart';
 
 class ProduitPage extends StatefulWidget {
   const ProduitPage({super.key});
@@ -166,12 +167,22 @@ class _ProduitPageState extends State<ProduitPage>
           // Sous-boutons
           if (_isFabExpanded) ...[
             FloatingActionButton.extended(
-              onPressed: () {
+              onPressed: () async {
                 setState(() {
                   _isFabExpanded = false;
                 });
                 _animationController.reverse();
-                // TODO: Ajouter un produit
+
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AjouterProduit(),
+                  ),
+                );
+
+                if (result == true) {
+                  _loadProduits(); // Rafraîchir la liste des produits
+                }
               },
               backgroundColor: Colors.green,
               icon: const Icon(Icons.add, size: 20, color: Colors.white),
