@@ -283,4 +283,14 @@ class ApiService {
   static Future<http.Response> getCategories() async {
     return await authenticatedRequest('/liste-categories', 'GET');
   }
+
+  static Future<http.Response> addCategorie(
+    Map<String, dynamic> categorieData,
+  ) async {
+    return await authenticatedRequest(
+      '/add-categorie',
+      'POST',
+      body: categorieData,
+    );
+  }
 }

@@ -8,6 +8,7 @@ class historique extends Model
 {
     protected $fillable = [
         'user_id',
+        'pharmacie_id',
         'action',
         'description',
     ];
@@ -15,5 +16,10 @@ class historique extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    
+    public function pharmacie()
+    {
+        return $this->belongsTo(Pharmacie::class);
     }
 }

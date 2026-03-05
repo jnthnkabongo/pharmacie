@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
+import 'dart:convert';
+import 'package:pharmacie_mobile/services/api_service.dart';
 
 class AjouterCategorie extends StatefulWidget {
   const AjouterCategorie({super.key});
@@ -9,9 +12,62 @@ class AjouterCategorie extends StatefulWidget {
 
 class _AjouterCategorieState extends State<AjouterCategorie> {
   final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
 
   final _nomCategorieController = TextEditingController();
   final _descriptionController = TextEditingController();
+
+  Future<void> _insertCategorie() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final categorieData = {
+        'nom': _nomCategorieController.text,
+        'description': _descriptionController.text,
+      };
+
+      final response = await ApiService.addCategorie(categorieData);
+
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Catégorie ajoutée avec succès'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      } else {
+        // Gérer les erreurs HTTP
+        String errorMessage = 'Erreur lors de l\'ajout de la catégorie';
+        try {
+          final responseData = jsonDecode(response.body);
+          if (responseData['message'] != null) {
+            errorMessage = responseData['message'];
+          }
+        } catch (e) {
+          // Si le parsing JSON échoue, utiliser le message par défaut
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur: $e'), backgroundColor: Colors.red),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -82,6 +138,18 @@ class _AjouterCategorieState extends State<AjouterCategorie> {
                         hintText: 'Entrez le nom de la catégorie',
                         border: OutlineInputBorder(),
                       ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Le nom de la catégorie est requis';
+                        }
+                        if (value.trim().length < 2) {
+                          return 'Le nom doit contenir au moins 2 caractères';
+                        }
+                        if (value.trim().length > 255) {
+                          return 'Le nom ne peut pas dépasser 255 caractères';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 20),
                     const Text(
@@ -99,14 +167,19 @@ class _AjouterCategorieState extends State<AjouterCategorie> {
                         hintText: 'Entrez la description de la catégorie',
                         border: OutlineInputBorder(),
                       ),
+                      maxLines: 3,
+                      validator: (value) {
+                        if (value != null && value.trim().length > 1000) {
+                          return 'La description ne peut pas dépasser 1000 caractères';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 20),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () {
-                          // TODO: Implémenter la logique d'ajout de catégorie
-                        },
+                        onPressed: _isLoading ? null : _insertCategorie,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF2E7D32),
                           foregroundColor: Colors.white,
@@ -115,13 +188,29 @@ class _AjouterCategorieState extends State<AjouterCategorie> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Text(
-                          'Enregistrer la catégorie',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child: _isLoading
+                            ? const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text('Enregistrement...'),
+                                ],
+                              )
+                            : const Text(
+                                'Enregistrer la catégorie',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
                     ),
                   ],

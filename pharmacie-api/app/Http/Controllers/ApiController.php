@@ -37,8 +37,15 @@ class ApiController extends Controller
             ], 401);
         }
 
+        if (is_null($user->pharmacie_id)) {
+            return response()->json([
+                'message' => 'Pharmacie non identifiée'
+            ], 401);
+        }
+
         $historique = historique::create([
             'user_id' => $user->id,
+            'pharmacie_id' => $user->pharmacie_id,
             'action' => $action,
             'description' => $description ?? 'Action effectuée',
         ]);
@@ -749,5 +756,51 @@ class ApiController extends Controller
             'message' => 'Liste des catégories',
             'categories' => $categories,
         ], 200);
+    }
+
+    public function addCategorie(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Utilisateur non identifié'
+            ], 401);
+        }
+
+        if (is_null($user->pharmacie_id)) {
+            return response()->json([
+                'message' => 'Pharmacie non identifiée'
+            ], 401);
+        }
+
+        $request->validate([
+            'nom' => 'required|string|max:255',
+            'description' => 'nullable|string',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $categorie = Categorie::create([
+                'nom' => $request->nom,
+                'description' => $request->description,
+                'pharmacie_id' => $user->pharmacie_id,
+            ]);
+
+            DB::commit();
+            $this->addHistorique('Ajout de la catégorie: ' . $categorie->nom);
+
+            return response()->json([
+                'message' => 'Catégorie ajoutée avec succès',
+                'categorie' => $categorie,
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Erreur lors de l\'ajout de la catégorie: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

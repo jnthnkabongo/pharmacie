@@ -43,5 +43,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Routes produits
     Route::post('/add-produit', [ApiController::class, 'addProduit']);
     Route::get('/liste-categories', [ApiController::class, 'getCategories']);
+    Route::post('add-categorie', [ApiController::class, 'addCategorie']);
 });
 
