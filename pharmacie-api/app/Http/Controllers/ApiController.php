@@ -180,6 +180,7 @@ class ApiController extends Controller
             ->whereHas('produit', function($query) use ($user) {
                 $query->where('pharmacie_id', $user->pharmacie_id);
             })
+            ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($item) {
                 return [
@@ -308,7 +309,11 @@ class ApiController extends Controller
 
         // Logique pour récupérer les produits
         // $produits = Produit::where('pharmacie_id', $user->pharmacie_id)->get();
-        $produits = Produit::with('categorie','fournisseur', 'stock', 'venteDetails', 'approvisionnementDetails', 'mouvementsStock')->where('pharmacie_id', $user->pharmacie_id)->get();
+        $produits = Produit::with('categorie','fournisseur', 'stock', 'venteDetails', 
+            'approvisionnementDetails', 'mouvementsStock')
+            ->where('pharmacie_id', $user->pharmacie_id)
+            ->orderBy('created_at', 'desc')
+            ->get();
         return response()->json([
             'message' => 'Liste des produits',
             'produits' => $produits, // À remplacer par la vraie logique

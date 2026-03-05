@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pharmacie_mobile/screens_admin/ajouter_categorie.dart';
 import 'dart:convert';
 
 import 'package:pharmacie_mobile/services/api_service.dart';
@@ -130,7 +131,10 @@ class _CategoriePageState extends State<CategoriePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Ajouter une catégorie
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AjouterCategorie()),
+          );
         },
         backgroundColor: const Color(0xFF2E7D32),
         child: const Icon(Icons.add, color: Colors.white),
