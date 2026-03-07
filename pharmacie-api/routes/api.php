@@ -44,5 +44,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/add-produit', [ApiController::class, 'addProduit']);
     Route::get('/liste-categories', [ApiController::class, 'getCategories']);
     Route::post('add-categorie', [ApiController::class, 'addCategorie']);
+    
+    // Routes seuil
+    Route::get('/seuil-atteint', [ApiController::class, 'seuil_atteint']);
+    Route::get('/stock-expire', [ApiController::class, 'stock_expires']);
+    Route::get('seuil-inferieur', [ApiController::class, 'seuil_inferieur']);
 });
 

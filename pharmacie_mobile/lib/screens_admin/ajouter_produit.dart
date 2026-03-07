@@ -344,7 +344,7 @@ class _AjouterProduitState extends State<AjouterProduit> {
                     ),
                     const SizedBox(height: 20),
                     DropdownButtonFormField<String>(
-                      value: _selectedCategorie,
+                      initialValue: _selectedCategorie,
                       decoration: const InputDecoration(
                         labelText: 'Catégorie *',
                         prefixIcon: Icon(Icons.category),
@@ -370,7 +370,7 @@ class _AjouterProduitState extends State<AjouterProduit> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                      value: _selectedFournisseur,
+                      initialValue: _selectedFournisseur,
                       decoration: const InputDecoration(
                         labelText: 'Fournisseur',
                         prefixIcon: Icon(Icons.business),

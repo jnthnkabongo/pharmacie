@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
 import 'dart:convert';
 import 'package:pharmacie_mobile/services/api_service.dart';
 
@@ -13,12 +12,51 @@ class AjouterCategorie extends StatefulWidget {
 class _AjouterCategorieState extends State<AjouterCategorie> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  int? _pharmacieId; // Variable pour stocker pharmacie_id
 
   final _nomCategorieController = TextEditingController();
   final _descriptionController = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo();
+  }
+
+  Future<void> _loadUserInfo() async {
+    final userInfo = await ApiService.getUserInfo();
+    setState(() {
+      // Stocker pharmacie_id dans la variable
+      _pharmacieId = userInfo?['pharmacie_id'];
+    });
+
+    // Récupérer pharmacie_id spécifiquement
+    if (_pharmacieId == null) {
+      // Rediriger ou afficher un message si pharmacie_id est null
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Aucune pharmacie associée à votre compte'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      // Optionnel: revenir en arrière
+      Navigator.pop(context);
+    }
+  }
+
   Future<void> _insertCategorie() async {
     if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    // Vérifier que pharmacie_id est disponible
+    if (_pharmacieId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Aucune pharmacie associée à votre compte'),
+          backgroundColor: Colors.red,
+        ),
+      );
       return;
     }
 
@@ -30,8 +68,10 @@ class _AjouterCategorieState extends State<AjouterCategorie> {
       final categorieData = {
         'nom': _nomCategorieController.text,
         'description': _descriptionController.text,
+        'pharmacie_id': _pharmacieId, // Utilisation de la variable
       };
 
+      print('Valeur ID: $_pharmacieId');
       final response = await ApiService.addCategorie(categorieData);
 
       if (response.statusCode == 201) {

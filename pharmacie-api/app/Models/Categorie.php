@@ -12,10 +12,16 @@ class Categorie extends Model
     protected $fillable = [
         'nom',
         'description',
+        'pharmacie_id'
     ];
 
     public function produits()
     {
         return $this->hasMany(Produit::class);
+    }
+
+    public function parmacie()
+    {
+        return $this->belongsTo(Pharmacie::class);
     }
 }

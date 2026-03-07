@@ -10,6 +10,7 @@ class Stock extends Model
     use HasFactory;
 
     protected $fillable = [
+        'pharmacie_id',
         'produit_id',
         'quantite',
         'seuil_alerte',
@@ -23,5 +24,10 @@ class Stock extends Model
     public function produit()
     {
         return $this->belongsTo(Produit::class);
+    }
+    
+    public function pharmacie()
+    {
+        return $this->belongsTo(Pharmacie::class);
     }
 }

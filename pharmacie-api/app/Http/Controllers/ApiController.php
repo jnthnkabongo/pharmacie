@@ -341,7 +341,11 @@ class ApiController extends Controller
         $this->addHistorique('Accès à la liste des ventes');
 
         // Logique pour récupérer les ventes
-        $ventes = Vente::with('client', 'vendeur', 'venteDetails.produit')->where('pharmacie_id', $user->pharmacie_id)->get();
+        $ventes = Vente::with('client', 'vendeur', 
+            'venteDetails.produit')
+            ->where('pharmacie_id', $user->pharmacie_id)
+            ->orderBy('created_at', 'desc')
+            ->get();
         return response()->json([
             'message' => 'Liste des ventes',
             'ventes' => $ventes, // À remplacer par la vraie logique
@@ -802,5 +806,84 @@ class ApiController extends Controller
                 'message' => 'Erreur lors de l\'ajout de la catégorie: ' . $e->getMessage()
             ], 500);
         }
+    }
+    //Alerte quand le stock est inférieur ou égal au seuil d'alerte
+    public function seuil_inferieur(){
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Utilisateur non identifié'
+            ], 401);
+        }
+
+        if (is_null($user->pharmacie_id)) {
+            return response()->json([
+                'message' => 'Pharmacie non identifiée'
+            ], 401);
+        }
+
+        $produits = Stock::with('produit')
+            ->where('pharmacie_id', $user->pharmacie_id)
+            ->where('seuil_alerte', '>', DB::raw('quantite'))
+            ->get();
+
+        return response()->json([
+            'message' => 'Produits dont la quantité est inférieur au seuil d\'alerte',
+            'produits' => $produits,
+        ], 200);
+    }
+
+    //Alerte quand le stock est expiré
+    public function stock_expires(){
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Utilisateur non identifié'
+            ], 401);
+        }
+
+        if (is_null($user->pharmacie_id)) {
+            return response()->json([
+                'message' => 'Pharmacie non identifiée'
+            ], 401);
+        }
+
+        $produits = Produit::where('pharmacie_id', $user->pharmacie_id)
+            ->where('date_expiration', '<', now())
+            ->get();
+
+        return response()->json([
+            'message' => 'Produits expirés',
+            'produits' => $produits,
+        ], 200);
+    }
+
+    //Alerte quand on atteint le seuil
+    public function seuil_atteint(){
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Utilisateur non identifié'
+            ], 401);
+        }
+
+        if (is_null($user->pharmacie_id)) {
+            return response()->json([
+                'message' => 'Pharmacie non identifiée'
+            ], 401);
+        }
+
+        $produits = Stock::with('produit')
+            ->where('pharmacie_id', $user->pharmacie_id)
+            ->where('seuil_alerte', '=', DB::raw('quantite'))
+            ->get();
+
+        return response()->json([
+            'message' => 'Produits en seuil d\'alerte',
+            'produits' => $produits,
+        ], 200);
     }
 }
