@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pharmacie_mobile/auth/login.dart';
 import 'package:pharmacie_mobile/services/api_service.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -272,7 +273,11 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     TextButton(
                       onPressed: () {
-                        Navigator.of(context).pop();
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (context) => const LoginPage(),
+                          ),
+                        );
                       },
                       child: const Text(
                         'Se connecter',

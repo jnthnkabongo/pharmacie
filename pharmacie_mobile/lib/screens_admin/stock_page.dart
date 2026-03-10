@@ -143,22 +143,7 @@ class _StockPageState extends State<StockPage> with TickerProviderStateMixin {
       ),
       body: Column(
         children: [
-          // Barre de recherche
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) => _filterStocks(),
-              decoration: InputDecoration(
-                hintText: 'Rechercher...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-          ),
-
+          SizedBox(height: 12),
           // Statistiques simples
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -188,6 +173,21 @@ class _StockPageState extends State<StockPage> with TickerProviderStateMixin {
                   ),
                 ),
               ],
+            ),
+          ),
+          // Barre de recherche
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) => _filterStocks(),
+              decoration: InputDecoration(
+                hintText: 'Rechercher...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
             ),
           ),
 

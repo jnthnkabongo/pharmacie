@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  //static const String baseUrl = 'http://127.0.0.1:8000/api';
+  //static const String baseUrl = 'http://192.168.123.34:8000/api';
   //static const String baseUrl = 'http://10.0.2.2:8000/api';
   static String get baseUrl {
     if (kIsWeb) {
@@ -286,11 +286,26 @@ class ApiService {
 
   static Future<http.Response> addCategorie(
     Map<String, dynamic> categorieData,
+  ) {
+    return authenticatedRequest('/add-categorie', 'POST', body: categorieData);
+  }
+
+  // Créer une pharmacie
+  static Future<http.Response> createPharmacie(
+    Map<String, dynamic> pharmacieData,
   ) async {
-    return await authenticatedRequest(
-      '/add-categorie',
-      'POST',
-      body: categorieData,
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/create-pharmacie'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode(pharmacieData),
+      );
+      return response;
+    } catch (e) {
+      throw Exception('Erreur lors de la création de la pharmacie: $e');
+    }
   }
 }

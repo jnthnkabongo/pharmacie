@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:pharmacie_mobile/services/api_service.dart';
 
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
@@ -8,6 +10,82 @@ class NotificationPage extends StatefulWidget {
 }
 
 class _NotificationPageState extends State<NotificationPage> {
+  bool _isLoading = false;
+  List<dynamic> _seuilAtteint = [];
+  List<dynamic> _stockExpires = [];
+  List<dynamic> _seuilInferieur = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAlerts();
+  }
+
+  Future<void> _loadAlerts() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Charger les trois types d'alertes en parallèle
+      final results = await Future.wait([
+        _fetchSeuilAtteint(),
+        _fetchStockExpires(),
+        _fetchSeuilInferieur(),
+      ]);
+
+      setState(() {
+        _seuilAtteint = results[0];
+        _stockExpires = results[1];
+        _seuilInferieur = results[2];
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  Future<List<dynamic>> _fetchSeuilAtteint() async {
+    final response = await ApiService.authenticatedRequest(
+      '/seuil-atteint',
+      'GET',
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['produits'] ?? [];
+    }
+    return [];
+  }
+
+  Future<List<dynamic>> _fetchStockExpires() async {
+    final response = await ApiService.authenticatedRequest(
+      '/stock-expire',
+      'GET',
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['produits'] ?? [];
+    }
+    return [];
+  }
+
+  Future<List<dynamic>> _fetchSeuilInferieur() async {
+    final response = await ApiService.authenticatedRequest(
+      '/seuil-inferieur',
+      'GET',
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['produits'] ?? [];
+    }
+    return [];
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,203 +106,104 @@ class _NotificationPageState extends State<NotificationPage> {
           ),
         ),
       ),
-      body: CustomScrollView(
-        slivers: [
-          // Statistiques des alertes
-          SliverToBoxAdapter(
-            child: Container(
-              margin: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildAlertCard('Critiques', '3', Colors.red),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: _loadAlerts,
+              child: CustomScrollView(
+                slivers: [
+                  // Statistiques des alertes
+                  SliverToBoxAdapter(
+                    child: Container(
+                      margin: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _buildAlertCard(
+                              'Critiques',
+                              '${_seuilInferieur.length}',
+                              Colors.red,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _buildAlertCard(
+                              'Urgentes',
+                              '${_seuilAtteint.length}',
+                              Colors.orange,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _buildAlertCard(
+                              'Expirés',
+                              '${_stockExpires.length}',
+                              Colors.purple,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildAlertCard('Urgentes', '7', Colors.orange),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(child: _buildAlertCard('Info', '12', Colors.blue)),
+
+                  // Section Stock Critique (seuil_inferieur)
+                  if (_seuilInferieur.isNotEmpty) ...[
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final produit = _seuilInferieur[index];
+                        return _buildProductAlertTile(
+                          produit['produit']['nom'] ?? 'Produit inconnu',
+                          'Stock critique: ${produit['quantite'] ?? 0} unités',
+                          'Seuil: ${produit['seuil_alerte'] ?? 0} unités',
+                          Icons.error,
+                          Colors.red,
+                          'CRITIQUE',
+                          () {},
+                        );
+                      }, childCount: _seuilInferieur.length),
+                    ),
+                  ],
+
+                  // Section Seuil Atteint (seuil_atteint)
+                  if (_seuilAtteint.isNotEmpty) ...[
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final produit = _seuilAtteint[index];
+                        return _buildProductAlertTile(
+                          produit['produit']['nom'] ?? 'Produit inconnu',
+                          'Seuil atteint: ${produit['quantite'] ?? 0} unités',
+                          'Seuil: ${produit['seuil_alerte'] ?? 0} unités',
+                          Icons.warning,
+                          Colors.orange,
+                          'URGENT',
+                          () {},
+                        );
+                      }, childCount: _seuilAtteint.length),
+                    ),
+                  ],
+
+                  // Section Produits Expirés (stock_expires)
+                  if (_stockExpires.isNotEmpty) ...[
+                    SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final produit = _stockExpires[index];
+                        return _buildProductAlertTile(
+                          produit['nom'] ?? 'Produit inconnu',
+                          'Produit expiré',
+                          'Date expiration: ${produit['date_expiration'] ?? 'Inconnue'}',
+                          Icons.date_range,
+                          Colors.purple,
+                          'EXPIRÉ',
+                          () {},
+                        );
+                      }, childCount: _stockExpires.length),
+                    ),
+                  ],
+
+                  const SliverToBoxAdapter(child: SizedBox(height: 20)),
                 ],
               ),
             ),
-          ),
-
-          // Section Alertes de stock
-          SliverToBoxAdapter(
-            child: _buildSectionHeader('Alertes de Stock', Icons.warning),
-          ),
-          SliverList(
-            delegate: SliverChildListDelegate([
-              _buildStockAlertTile(
-                'Paracétamol 500mg',
-                'Stock critique: 5 unités restantes',
-                'Seuil: 20 unités',
-                Icons.error,
-                Colors.red,
-                'CRITIQUE',
-                () {
-                  // TODO: Action critique
-                },
-              ),
-              _buildStockAlertTile(
-                'Amoxicilline 1g',
-                'Stock faible: 15 unités restantes',
-                'Seuil: 25 unités',
-                Icons.warning,
-                Colors.orange,
-                'URGENT',
-                () {
-                  // TODO: Action urgente
-                },
-              ),
-              _buildStockAlertTile(
-                'Ibuprofène 400mg',
-                'Stock bas: 28 unités restantes',
-                'Seuil: 30 unités',
-                Icons.info,
-                Colors.blue,
-                'INFO',
-                () {
-                  // TODO: Action info
-                },
-              ),
-            ]),
-          ),
-
-          // Section Notifications système
-          SliverToBoxAdapter(
-            child: _buildSectionHeader(
-              'Notifications Système',
-              Icons.notifications,
-            ),
-          ),
-          SliverList(
-            delegate: SliverChildListDelegate([
-              _buildNotificationTile(
-                'Nouvelle vente enregistrée',
-                'Vente #1234 - Client: Jean Dupont',
-                'Il y a 5 minutes',
-                Icons.receipt,
-                Colors.green,
-                () {
-                  // TODO: Voir détails vente
-                },
-              ),
-              _buildNotificationTile(
-                'Produit ajouté avec succès',
-                'Vitamine C ajoutée au catalogue',
-                'Il y a 1 heure',
-                Icons.add_circle,
-                Colors.blue,
-                () {
-                  // TODO: Voir produit
-                },
-              ),
-              _buildNotificationTile(
-                'Rappel: Inventaire programmé',
-                'Inventaire mensuel prévu demain',
-                'Il y a 2 heures',
-                Icons.schedule,
-                Colors.purple,
-                () {
-                  // TODO: Voir calendrier
-                },
-              ),
-            ]),
-          ),
-
-          // Section Rappels
-          SliverToBoxAdapter(
-            child: _buildSectionHeader('Rappels', Icons.alarm),
-          ),
-          SliverList(
-            delegate: SliverChildListDelegate([
-              _buildReminderTile(
-                'Commande fournisseur',
-                'Passer commande pour Fournisseur A',
-                'Aujourd\'hui, 14:00',
-                Icons.shopping_cart,
-                Colors.orange,
-                true,
-                () {
-                  // TODO: Passer commande
-                },
-              ),
-              _buildReminderTile(
-                'Vérifier péremptions',
-                'Produits expirant ce mois',
-                'Demain, 09:00',
-                Icons.date_range,
-                Colors.red,
-                false,
-                () {
-                  // TODO: Voir péremptions
-                },
-              ),
-              _buildReminderTile(
-                'Backup hebdomadaire',
-                'Sauvegarder les données',
-                'Vendredi, 18:00',
-                Icons.backup,
-                Colors.blue,
-                false,
-                () {
-                  // TODO: Lancer backup
-                },
-              ),
-            ]),
-          ),
-
-          // Section Configuration
-          SliverToBoxAdapter(
-            child: _buildSectionHeader(
-              'Configuration des Alertes',
-              Icons.settings,
-            ),
-          ),
-          SliverList(
-            delegate: SliverChildListDelegate([
-              _buildConfigTile(
-                'Seuils de stock',
-                'Configurer les alertes automatiques',
-                Icons.tune,
-                Colors.indigo,
-                () {
-                  // TODO: Configurer seuils
-                },
-              ),
-              _buildConfigTile(
-                'Fréquence des notifications',
-                'Choisir quand recevoir les alertes',
-                Icons.timer,
-                Colors.teal,
-                () {
-                  // TODO: Configurer fréquence
-                },
-              ),
-              _buildConfigTile(
-                'Types de notifications',
-                'Sélectionner les alertes à recevoir',
-                Icons.filter_list,
-                Colors.purple,
-                () {
-                  // TODO: Configurer types
-                },
-              ),
-            ]),
-          ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 20)),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _showAddNotificationDialog();
-        },
-        backgroundColor: const Color(0xFF2E7D32),
-        child: const Icon(Icons.add),
-      ),
     );
   }
 
@@ -260,34 +239,7 @@ class _NotificationPageState extends State<NotificationPage> {
     );
   }
 
-  Widget _buildSectionHeader(String title, IconData icon) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: const Color(0xFF2E7D32).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, color: const Color(0xFF2E7D32), size: 20),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1F2937),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStockAlertTile(
+  Widget _buildProductAlertTile(
     String title,
     String subtitle,
     String threshold,
@@ -435,164 +387,6 @@ class _NotificationPageState extends State<NotificationPage> {
             const SizedBox(height: 2),
             Text(time, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
           ],
-        ),
-        trailing: Container(
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Icon(
-            Icons.arrow_forward_ios,
-            size: 14,
-            color: Colors.grey[600],
-          ),
-        ),
-        onTap: onTap,
-      ),
-    );
-  }
-
-  Widget _buildReminderTile(
-    String title,
-    String subtitle,
-    String time,
-    IconData icon,
-    Color color,
-    bool isToday,
-    VoidCallback onTap,
-  ) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-        border: isToday ? Border.all(color: color.withOpacity(0.3)) : null,
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: color, size: 22),
-        ),
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1F2937),
-                ),
-              ),
-            ),
-            if (isToday)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  'AUJOURD\'HUI',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 8,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              time,
-              style: TextStyle(
-                fontSize: 12,
-                color: color,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-        trailing: Container(
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Icon(
-            Icons.arrow_forward_ios,
-            size: 14,
-            color: Colors.grey[600],
-          ),
-        ),
-        onTap: onTap,
-      ),
-    );
-  }
-
-  Widget _buildConfigTile(
-    String title,
-    String subtitle,
-    IconData icon,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: color, size: 22),
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF1F2937),
-          ),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: TextStyle(fontSize: 13, color: Colors.grey[600]),
         ),
         trailing: Container(
           padding: const EdgeInsets.all(4),
