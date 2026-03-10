@@ -14,6 +14,7 @@ class Fournisseur extends Model
         'telephone',
         'adresse',
         'email',
+        'pharmacie_id'
     ];
 
     public function produits()

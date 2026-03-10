@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pharmacie_mobile/screens_admin/ajout_multiple_produits.dart';
 import 'package:pharmacie_mobile/services/api_service.dart';
 import 'dart:convert';
 
@@ -173,6 +174,19 @@ class _AjouterProduitState extends State<AjouterProduit> {
             ),
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_box),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AjoutMultipleProduits(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),

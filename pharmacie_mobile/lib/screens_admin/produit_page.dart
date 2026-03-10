@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pharmacie_mobile/services/api_service.dart';
 import 'dart:convert';
 import 'package:pharmacie_mobile/screens_admin/ajouter_produit.dart';
+import 'package:pharmacie_mobile/screens_admin/ajout_multiple_produits.dart';
 
 class ProduitPage extends StatefulWidget {
   const ProduitPage({super.key});
@@ -11,7 +12,7 @@ class ProduitPage extends StatefulWidget {
 }
 
 class _ProduitPageState extends State<ProduitPage>
-  with TickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   bool _isFabExpanded = false;
   late AnimationController _animationController;
@@ -191,6 +192,7 @@ class _ProduitPageState extends State<ProduitPage>
                 style: TextStyle(fontSize: 12, color: Colors.white),
               ),
             ),
+
             const SizedBox(height: 8),
             FloatingActionButton.extended(
               onPressed: () {
@@ -201,13 +203,9 @@ class _ProduitPageState extends State<ProduitPage>
                 // TODO: Importer des produits
               },
               backgroundColor: Colors.green,
-              icon: const Icon(
-                Icons.upload_file,
-                size: 20,
-                color: Colors.white,
-              ),
+              icon: const Icon(Icons.people, size: 20, color: Colors.white),
               label: const Text(
-                'Exporter',
+                'Fournisseur',
                 style: TextStyle(fontSize: 12, color: Colors.white),
               ),
             ),
@@ -221,9 +219,9 @@ class _ProduitPageState extends State<ProduitPage>
                 // TODO: Exporter des produits
               },
               backgroundColor: Colors.green,
-              icon: const Icon(Icons.download, size: 20, color: Colors.white),
+              icon: const Icon(Icons.money, size: 20, color: Colors.white),
               label: const Text(
-                'Importer',
+                'Achats',
                 style: TextStyle(color: Colors.white),
               ),
             ),

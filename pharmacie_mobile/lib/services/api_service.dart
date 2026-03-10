@@ -308,4 +308,23 @@ class ApiService {
       throw Exception('Erreur lors de la création de la pharmacie: $e');
     }
   }
+
+  // Ajouter plusieurs produits en une seule fois
+  static Future<http.Response> addMultipleProduits(
+    List<Map<String, dynamic>> produitsData,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/add-multiple-produits'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({'produits': produitsData}),
+      );
+      return response;
+    } catch (e) {
+      throw Exception('Erreur lors de l\'ajout multiple des produits: $e');
+    }
+  }
 }
