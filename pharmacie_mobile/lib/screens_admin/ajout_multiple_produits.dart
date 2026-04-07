@@ -127,39 +127,30 @@ class _AjoutMultipleProduitsState extends State<AjoutMultipleProduits> {
         }
       }
 
-      // Envoyer les produits un par un (car l'API n'a peut-être pas d'endpoint批量)
-      int successCount = 0;
-      List<String> errors = [];
-
-      for (var produitData in produitsData) {
-        try {
-          final response = await ApiService.addProduit(produitData);
-          if (response.statusCode == 201) {
-            successCount++;
-          } else {
-            final errorData = jsonDecode(response.body);
-            errors.add(
-              '${produitData['nom']}: ${errorData['message'] ?? 'Erreur'}',
-            );
-          }
-        } catch (e) {
-          errors.add('${produitData['nom']}: Erreur réseau');
-        }
-      }
+      // Utiliser la nouvelle API d'ajout multiple
+      final response = await ApiService.addMultipleProduits(produitsData);
 
       if (mounted) {
+        final responseData = jsonDecode(response.body);
+        final successCount = responseData['statistiques']['succes'] ?? 0;
+        final errorCount = responseData['statistiques']['echecs'] ?? 0;
+        final errors = List<String>.from(
+          (responseData['erreurs'] as List?)?.map(
+                (e) => '${e['nom']}: ${e['message']}',
+              ) ??
+              [],
+        );
+
         if (successCount > 0) {
           String message = '$successCount produit(s) ajouté(s) avec succès';
-          if (errors.isNotEmpty) {
-            message += '\n${errors.length} erreur(s)';
+          if (errorCount > 0) {
+            message += '\n$errorCount erreur(s)';
           }
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(message),
-              backgroundColor: successCount == produitsData.length
-                  ? Colors.green
-                  : Colors.orange,
+              backgroundColor: errorCount == 0 ? Colors.green : Colors.orange,
               duration: const Duration(seconds: 4),
             ),
           );

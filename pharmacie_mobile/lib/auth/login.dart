@@ -16,12 +16,43 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  String? _selectedPharmacie;
+  List<Map<String, dynamic>> _pharmacies = [];
+  bool _isLoadingPharmacies = true;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPharmacies();
+  }
+
+  Future<void> _loadPharmacies() async {
+    // Si les données de test fonctionnent, essayer l'API
+
+    try {
+      final pharmacies = await ApiService.listePharmacies();
+
+      if (mounted) {
+        setState(() {
+          _pharmacies = pharmacies;
+          _isLoadingPharmacies = false;
+        });
+        print('État mis à jour: ${_pharmacies.length} pharmacies');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingPharmacies = false;
+        });
+      }
+    }
   }
 
   Future<void> _login() async {
@@ -35,6 +66,7 @@ class _LoginPageState extends State<LoginPage> {
       final response = await ApiService.login(
         _emailController.text.trim(),
         _passwordController.text,
+        pharmacieId: _selectedPharmacie,
       );
 
       if (response['success']) {
@@ -51,9 +83,11 @@ class _LoginPageState extends State<LoginPage> {
             MaterialPageRoute(builder: (context) => const MainPage()),
           );
         } else {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const LoginPage()),
-          );
+          if (mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const LoginPage()),
+            );
+          }
         }
       } else {
         if (mounted) {
@@ -144,6 +178,59 @@ class _LoginPageState extends State<LoginPage> {
                 key: _formKey,
                 child: Column(
                   children: [
+                    // Sélection de la pharmacie
+                    _isLoadingPharmacies
+                        ? const Center(child: CircularProgressIndicator())
+                        : DropdownButtonFormField<String>(
+                            value: _selectedPharmacie,
+                            decoration: InputDecoration(
+                              labelText: 'Pharmacie',
+                              hintText: 'Sélectionnez votre pharmacie',
+                              prefixIcon: const Icon(
+                                Icons.local_pharmacy_outlined,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE5E7EB),
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE5E7EB),
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF2E7D32),
+                                  width: 2,
+                                ),
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                            ),
+                            items: _pharmacies.map((pharmacie) {
+                              return DropdownMenuItem<String>(
+                                value: pharmacie['id'].toString(),
+                                child: Text(pharmacie['nom']),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedPharmacie = value;
+                              });
+                            },
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Veuillez sélectionner une pharmacie';
+                              }
+                              return null;
+                            },
+                          ),
+
+                    const SizedBox(height: 20),
                     // Champ email
                     TextFormField(
                       controller: _emailController,

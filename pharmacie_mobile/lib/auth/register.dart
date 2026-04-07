@@ -47,7 +47,9 @@ class _RegisterPageState extends State<RegisterPage> {
               behavior: SnackBarBehavior.floating,
             ),
           );
-          Navigator.of(context).pop();
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const LoginPage()),
+          );
         }
       } else {
         if (mounted) {
@@ -167,7 +169,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 TextFormField(
                   controller: _telephoneController,
                   decoration: InputDecoration(
-                    labelText: '+243 974133780',
+                    labelText: 'Numéro de téléphone',
                     hintText: '+243 974133780',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),

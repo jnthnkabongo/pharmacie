@@ -99,7 +99,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
+                        backgroundColor: Color(0xFF2E7D32),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -145,7 +145,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
       height: 8,
       width: _currentPage == index ? 24 : 8,
       decoration: BoxDecoration(
-        color: _currentPage == index ? Colors.blue : Colors.grey.shade300,
+        color: _currentPage == index ? Color(0xFF2E7D32) : Colors.grey.shade300,
         borderRadius: BorderRadius.circular(4),
       ),
     );

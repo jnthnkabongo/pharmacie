@@ -25,19 +25,52 @@ class ApiService {
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_info';
 
+  // Liste Pharmacies
+  static Future<List<Map<String, dynamic>>> listePharmacies() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/liste-pharmacie-connexion'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return List<Map<String, dynamic>>.from(data['pharmacies'] ?? []);
+      } else {
+        return [];
+      }
+    } catch (e) {
+      print('Erreur lors du chargement des pharmacies: $e');
+      return [];
+    }
+  }
+
   // Connexion
   static Future<Map<String, dynamic>> login(
     String email,
-    String password,
-  ) async {
+    String password, {
+    String? pharmacieId,
+  }) async {
     try {
+      final Map<String, dynamic> loginData = {
+        'email': email,
+        'password': password,
+      };
+
+      if (pharmacieId != null) {
+        loginData['pharmacie_id'] = pharmacieId;
+      }
+
       final response = await http.post(
         Uri.parse('$baseUrl/login'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: jsonEncode({'email': email, 'password': password}),
+        body: jsonEncode(loginData),
       );
 
       if (response.statusCode == 200) {
