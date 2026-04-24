@@ -45,6 +45,7 @@ class ApiController extends Controller
 
         $historique = historique::create([
             'user_id' => $user->id,
+            'pharmacie_id' => $user->pharmacie_id,
             'action' => $action,
             'description' => $description ?? 'Action effectuée',
         ]);
@@ -166,10 +167,57 @@ class ApiController extends Controller
             ]
         ], 200);
     }
+
+    public function dashboard(){
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Utilisateur non identifié'
+            ], 401);
+        }
+
+        $this->addHistorique('Accès au dahsboard');
+
+        $stockQuantite = Stock::sum('quantite');
+        $StockValeurActuel = Stock::join('produits', 'stocks.produit_id', '=', 'produits.id')
+            ->where('stocks.quantite', '>', 0)
+            ->selectRaw('SUM(stocks.quantite * produits.prix_achat) as total_value')
+            ->value('total_value') ?? 0;
+        $peraonnelQuantite = User::count();
+        $produitQuatite = Produit::count();
+        $venteQuantite = Vente::count();
+        $sommeVenteJournalier = Vente::whereDate('created_at', today())->sum('montant_total');
+        $sommeVenteTotal = Vente::sum('montant_total');
+        $sommeQuantiteStockattendu = Produit::sum('prix_vente');
+        $sommeQuantiteStockvaleur = Produit::sum('prix_achat');
+
+        return response()->json([
+            'message' => 'Les differents valeurs',
+            'stockQuantite' => $stockQuantite,
+            'StockValeurActuel' => $StockValeurActuel,
+            'personnelQuantite' => $peraonnelQuantite,
+            'produitQuantite' => $produitQuatite,
+            'venteQuantite' => $venteQuantite,
+            'sommeVenteJournalier' => $sommeVenteJournalier,
+            'sommeVenteTotal' => $sommeVenteTotal,
+            'sommeQuantiteStockattendu' => $sommeQuantiteStockattendu,
+            'sommeQuantiteStockvaleur' => $sommeQuantiteStockvaleur
+        ], 200);
+
+    }
     
     //Creation des utilisateurs
     public function createUser(Request $request)
     {
+         $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Utilisateur non identifié'
+            ], 401);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:150',
             'email' => 'required|email|unique:users',
@@ -725,6 +773,7 @@ class ApiController extends Controller
             'fournisseur_id' => 'nullable|exists:fournisseurs,id',
             'code_barre' => 'nullable|string|max:50',
             'date_expiration' => 'nullable|date',
+            //'pharmacie_id' => 'required|integer',
         ]);
 
         try {
@@ -737,13 +786,15 @@ class ApiController extends Controller
                 'prix_vente' => $request->prix_vente,
                 'categorie_id' => $request->categorie_id,
                 'fournisseur_id' => $request->fournisseur_id,
-                'pharmacie_id' => $user->pharmacie_id,
+                'pharmacie_id' => Auth::user()->pharmacie_id,
                 'code_barre' => $request->code_barre,
                 'date_expiration' => $request->date_expiration,
+                //'pharmacie_id' => $->pharmacie_id,
             ]);
 
             // Créer le stock initial
             Stock::create([
+                'pharmacie_id' => Auth::user()->pharmacie_id,
                 'produit_id' => $produit->id,
                 'quantite' => $request->quantite,
                 'seuil_alerte' => $request->seuil_alerte ?? 10,

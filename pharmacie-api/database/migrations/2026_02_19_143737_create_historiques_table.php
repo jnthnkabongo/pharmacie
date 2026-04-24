@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('historiques', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->integer('pharmacie_id');
             $table->string('action');
             $table->string('description');
             $table->timestamps();

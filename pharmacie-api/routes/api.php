@@ -27,6 +27,8 @@ Route::post('/login', [ApiController::class, 'login']);
 Route::post('/create-user', [ApiController::class, 'createUser']);
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('dashboard', [ApiController::class, 'dashboard']);
+    
     Route::get('historique', [ApiController::class, 'getHistoriques']);
     Route::get('/liste-stock', [ApiController::class, 'getStock']);
     Route::get('liste-produits', [ApiController::class, 'getProduits']);
