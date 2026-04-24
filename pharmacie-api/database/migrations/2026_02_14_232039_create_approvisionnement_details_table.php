@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('approvisionnement_details', function (Blueprint $table) {
             $table->id();
+            $table->integer('pharmacie_id');
             $table->foreignId('approvisionnement_id')->constrained()->onDelete('cascade');
             $table->foreignId('produit_id')->constrained();
             $table->integer('quantite');

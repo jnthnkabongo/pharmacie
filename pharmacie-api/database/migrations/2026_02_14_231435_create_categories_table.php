@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nom', 100);
             $table->text('description')->nullable();
+            $table->integer('pharmacie_id');
             $table->timestamps();
         });
     }

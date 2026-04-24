@@ -10,6 +10,7 @@ class ApprovisionnementDetail extends Model
     use HasFactory;
 
     protected $fillable = [
+        'pharmacie_id',
         'approvisionnement_id',
         'produit_id',
         'quantite',

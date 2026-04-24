@@ -45,7 +45,6 @@ class ApiController extends Controller
 
         $historique = historique::create([
             'user_id' => $user->id,
-            'pharmacie_id' => $user->pharmacie_id,
             'action' => $action,
             'description' => $description ?? 'Action effectuée',
         ]);
@@ -96,38 +95,63 @@ class ApiController extends Controller
     //         'message' => 'Identifiants invalides'
     //     ], 401);
     // }
+    public function listePharmacie(){
+        $listePharmacies = Pharmacie::orderBy('nom')->get();
+        return response()->json([
+            'message' => 'Liste des pharmacies',
+            'pharmacies' => $listePharmacies
+        ], 200);
+    }
+
     public function login(Request $request)
     {
-        //Validation
         $validated = $request->validate([
+            'pharmacie_id' => 'required|integer',
             'email' => 'required|email',
             'password' => 'required|string',
         ]);
 
-        //Récupérer l'utilisateur
+        // Récupérer l'utilisateur
         $user = User::where('email', $validated['email'])->first();
 
-        //Vérifier si utilisateur existe et mot de passe correct
-        if (!$user || !Hash::check($validated['password'], $user->password)) {
+        if (!$user) {
             return response()->json([
                 'message' => 'Identifiants invalides'
             ], 401);
         }
 
-        //Vérifier si l'utilisateur est actif
+        // Vérifier le mot de passe
+        if (!Hash::check($validated['password'], $user->password)) {
+            return response()->json([
+                'message' => 'Mot de passe incorrect'
+            ], 401);
+        }
+
+        // Vérifier la pharmacie
+        if ((int)$validated['pharmacie_id'] !== (int)$user->pharmacie_id) {
+            return response()->json([
+                'message' => 'Cette pharmacie n\'existe pas dans la base de données'
+            ], 401);
+        }
+
+        // Vérifier si l'utilisateur est actif
         if (!$user->actif) {
             return response()->json([
                 'message' => 'Utilisateur désactivé'
             ], 403);
         }
 
+        // Charger la relation pharmacie (évite erreur null)
+        $user->load('pharmacie');
 
-        //Créer un token API via Sanctum
+        // Créer un token API via Sanctum
         $token = $user->createToken('pharmacie-api')->plainTextToken;
 
-        $this->addHistorique('Connexion réussie');
+        // Historique (optionnel : vérifier si la méthode existe)
+        if (method_exists($this, 'addHistorique')) {
+            $this->addHistorique('Connexion réussie');
+        }
 
-        //Retour JSON avec seulement les champs nécessaires
         return response()->json([
             'message' => 'Connexion réussie',
             'token' => $token,
@@ -137,7 +161,7 @@ class ApiController extends Controller
                 'email' => $user->email,
                 'role_id' => $user->role_id,
                 'pharmacie_id' => $user->pharmacie_id,
-                'nom' => $user->pharmacie->nom,
+                'nom' => $user->pharmacie->nom ?? null,
                 'actif' => $user->actif,
             ]
         ], 200);
@@ -188,18 +212,18 @@ class ApiController extends Controller
                 $query->where('pharmacie_id', $user->pharmacie_id);
             })
             ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'produit_id' => $item->produit_id,
-                    'produit_nom' => $item->produit ? $item->produit->nom : 'Produit inconnu',
-                    'quantite' => $item->quantite,
-                    'seuil_alerte' => $item->seuil_alerte,
-                    'statut' => $item->quantite <= $item->seuil_alerte ? 'Alerte' : 'Normal',
-                    'created_at' => $item->created_at->format('Y-m-d H:i:s'),
-                ];
-            });
+            ->get();
+            // ->map(function ($item) {
+            //     return [
+            //         'id' => $item->id,
+            //         'produit_id' => $item->produit_id,
+            //         'produit_nom' => $item->produit ? $item->produit->nom : 'Produit inconnu',
+            //         'quantite' => $item->quantite,
+            //         'seuil_alerte' => $item->seuil_alerte,
+            //         'statut' => $item->quantite <= $item->seuil_alerte ? 'Alerte' : 'Normal',
+            //         'created_at' => $item->created_at->format('Y-m-d H:i:s'),
+            //     ];
+            // });
 
         return response()->json([
             'message' => 'Liste des stocks',
@@ -737,6 +761,117 @@ class ApiController extends Controller
             DB::rollBack();
             return response()->json([
                 'message' => 'Erreur lors de l\'ajout du produit: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    //Ajout multiple de produits
+    public function addMultipleProduits(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Utilisateur non identifié'
+            ], 401);
+        }
+
+        $request->validate([
+            'produits' => 'required|array|min:1',
+            'produits.*.nom' => 'required|string|max:150',
+            'produits.*.description' => 'nullable|string',
+            'produits.*.prix_achat' => 'nullable|numeric|min:0',
+            'produits.*.prix_vente' => 'required|numeric|min:0',
+            'produits.*.quantite' => 'required|integer|min:0',
+            'produits.*.seuil_alerte' => 'nullable|integer|min:0',
+            'produits.*.categorie_id' => 'nullable|exists:categories,id',
+            'produits.*.fournisseur_id' => 'nullable|exists:fournisseurs,id',
+            'produits.*.code_barre' => 'nullable|string|max:50',
+            'produits.*.date_expiration' => 'nullable|date',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $produitsCrees = [];
+            $erreurs = [];
+
+            foreach ($request->produits as $index => $produitData) {
+                try {
+                    // Vérifier si le produit avec le même nom existe déjà pour cette pharmacie
+                    $produitExistant = Produit::where('pharmacie_id', $user->pharmacie_id)
+                        ->where('nom', $produitData['nom'])
+                        ->first();
+
+                    if ($produitExistant) {
+                        $erreurs[] = [
+                            'index' => $index,
+                            'nom' => $produitData['nom'],
+                            'message' => 'Un produit avec ce nom existe déjà'
+                        ];
+                        continue;
+                    }
+
+                    $produit = Produit::create([
+                        'nom' => $produitData['nom'],
+                        'description' => $produitData['description'] ?? null,
+                        'prix_achat' => $produitData['prix_achat'] ?? 0,
+                        'prix_vente' => $produitData['prix_vente'],
+                        'categorie_id' => $produitData['categorie_id'] ?? null,
+                        'fournisseur_id' => $produitData['fournisseur_id'] ?? null,
+                        'pharmacie_id' => $user->pharmacie_id,
+                        'code_barre' => $produitData['code_barre'] ?? null,
+                        'date_expiration' => $produitData['date_expiration'] ?? null,
+                    ]);
+
+                    // Créer le stock initial
+                    Stock::create([
+                        'produit_id' => $produit->id,
+                        'quantite' => $produitData['quantite'],
+                        'seuil_alerte' => $produitData['seuil_alerte'] ?? 10,
+                    ]);
+
+                    $produitsCrees[] = $produit;
+
+                } catch (\Exception $e) {
+                    $erreurs[] = [
+                        'index' => $index,
+                        'nom' => $produitData['nom'] ?? 'Inconnu',
+                        'message' => 'Erreur: ' . $e->getMessage()
+                    ];
+                }
+            }
+
+            if (!empty($produitsCrees)) {
+                // Ajouter l'historique une seule fois pour l'ajout multiple
+                $this->addHistorique('Ajout multiple de produits (' . count($produitsCrees) . ' produits)');
+            }
+
+            DB::commit();
+
+            $statusCode = empty($erreurs) ? 201 : (empty($produitsCrees) ? 500 : 207);
+            $message = empty($erreurs) 
+                ? count($produitsCrees) . ' produit(s) ajouté(s) avec succès'
+                : (empty($produitsCrees) 
+                    ? 'Aucun produit n\'a pu être ajouté'
+                    : count($produitsCrees) . ' produit(s) ajouté(s) avec succès, ' . count($erreurs) . ' erreur(s)');
+
+            return response()->json([
+                'message' => $message,
+                'produits_crees' => $produitsCrees,
+                'erreurs' => $erreurs,
+                'statistiques' => [
+                    'total_demande' => count($request->produits),
+                    'succes' => count($produitsCrees),
+                    'echecs' => count($erreurs)
+                ]
+            ], $statusCode);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Erreur lors de l\'ajout multiple des produits: ' . $e->getMessage(),
+                'erreurs' => [['message' => 'Erreur générale: ' . $e->getMessage()]]
             ], 500);
         }
     }

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('produit_id')->unique()->constrained()->onDelete('cascade');
             $table->integer('quantite')->default(0);
             $table->integer('seuil_alerte')->default(5);
+            $table->integer('pharmacie_id');
             $table->timestamps();
         });
     }

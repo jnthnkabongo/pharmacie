@@ -16,12 +16,13 @@ use App\Http\Controllers\ApiController;
 */
 
 // Routes publiques
-Route::get('/', function () {
-    return response()->json(['message' => 'API Pharmacie']);
-});
+// Route::get('/', function () {
+//     return response()->json(['message' => 'API Pharmacie']);
+// });
 
 // Routes d'authentification
 Route::post('/register', [ApiController::class, 'register']);
+Route::get('liste-pharmacie-connexion', [ApiController::class, 'listePharmacie']);
 Route::post('/login', [ApiController::class, 'login']);
 Route::post('/create-user', [ApiController::class, 'createUser']);
 
@@ -42,6 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Routes produits
     Route::post('/add-produit', [ApiController::class, 'addProduit']);
+    Route::post('/add-multiple-produits', [ApiController::class, 'addMultipleProduits']);
     Route::get('/liste-categories', [ApiController::class, 'getCategories']);
     Route::post('add-categorie', [ApiController::class, 'addCategorie']);
     

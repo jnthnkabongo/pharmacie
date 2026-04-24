@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('produits', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('pharmacie_id')->constrained()->onDelete('cascade');
+            $table->foreignId('pharmacie_id');
             $table->foreignId('categorie_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('fournisseur_id')->nullable()->constrained()->onDelete('set null');
             $table->string('nom', 150);

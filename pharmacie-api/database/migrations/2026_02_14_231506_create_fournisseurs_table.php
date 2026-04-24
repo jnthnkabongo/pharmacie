@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('telephone', 20)->nullable();
             $table->string('adresse', 255)->nullable();
             $table->string('email', 100)->nullable();
+            $table->integer('pharmacie_id');
             $table->timestamps();
         });
     }
