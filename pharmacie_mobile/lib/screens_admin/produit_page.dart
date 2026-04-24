@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:pharmacie_mobile/services/api_service.dart';
 import 'dart:convert';
 import 'package:pharmacie_mobile/screens_admin/ajouter_produit.dart';
-import 'package:pharmacie_mobile/screens_admin/ajout_multiple_produits.dart';
 
 class ProduitPage extends StatefulWidget {
   const ProduitPage({super.key});

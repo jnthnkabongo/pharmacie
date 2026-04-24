@@ -15,7 +15,7 @@ class _AjoutMultipleProduitsState extends State<AjoutMultipleProduits> {
 
   List<Map<String, dynamic>> _categories = [];
   List<Map<String, dynamic>> _fournisseurs = [];
-  List<ProduitItem> _produits = [ProduitItem()];
+  final List<ProduitItem> _produits = [ProduitItem()];
 
   @override
   void initState() {
@@ -459,7 +459,7 @@ class _AjoutMultipleProduitsState extends State<AjoutMultipleProduits> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: produit.selectedCategorie,
+                        initialValue: produit.selectedCategorie,
                         decoration: const InputDecoration(
                           labelText: 'Catégorie *',
                           prefixIcon: Icon(Icons.category),
@@ -495,7 +495,7 @@ class _AjoutMultipleProduitsState extends State<AjoutMultipleProduits> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: produit.selectedFournisseur,
+                        initialValue: produit.selectedFournisseur,
                         decoration: const InputDecoration(
                           labelText: 'Fournisseur',
                           prefixIcon: Icon(Icons.business),

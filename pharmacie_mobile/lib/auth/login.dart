@@ -182,7 +182,7 @@ class _LoginPageState extends State<LoginPage> {
                     _isLoadingPharmacies
                         ? const Center(child: CircularProgressIndicator())
                         : DropdownButtonFormField<String>(
-                            value: _selectedPharmacie,
+                            initialValue: _selectedPharmacie,
                             decoration: InputDecoration(
                               labelText: 'Pharmacie',
                               hintText: 'Sélectionnez votre pharmacie',

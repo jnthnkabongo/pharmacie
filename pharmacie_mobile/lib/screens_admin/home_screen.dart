@@ -134,7 +134,7 @@ class _HomeScreenState extends State<HomeScreenAdmin> {
                                   width: 60,
                                   height: 60,
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: Colors.white.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Icon(
@@ -150,7 +150,7 @@ class _HomeScreenState extends State<HomeScreenAdmin> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Bienvenue Administrateur,',
+                                        'Bienvenue AdministrateurBailo,',
                                         style: TextStyle(
                                           color: Colors.white.withOpacity(0.9),
                                           fontSize: 14,
@@ -176,11 +176,11 @@ class _HomeScreenState extends State<HomeScreenAdmin> {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
-                                'Nom: ${_userInfo!['nom'] ?? 'N/A'}',
+                                'Etablissement: ${_userInfo!['nom'] ?? 'N/A'}',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 12,
