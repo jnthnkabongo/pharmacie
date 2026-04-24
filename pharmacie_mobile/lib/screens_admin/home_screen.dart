@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:pharmacie_mobile/services/api_service.dart';
 import 'package:pharmacie_mobile/screens_admin/vente_page_fixed.dart';
@@ -11,11 +12,13 @@ class HomeScreenAdmin extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreenAdmin> {
   Map<String, dynamic>? _userInfo;
+  Map<String, dynamic>? _dashInfo;
 
   @override
   void initState() {
     super.initState();
     _loadUserInfo();
+    _loadDashboard();
   }
 
   Future<void> _loadUserInfo() async {
@@ -23,6 +26,20 @@ class _HomeScreenState extends State<HomeScreenAdmin> {
     setState(() {
       _userInfo = userInfo;
     });
+  }
+
+  Future<void> _loadDashboard() async {
+    try {
+      final response = await ApiService.getDashboard();
+
+      if (response.statusCode == 200) {
+        final dashInfo = jsonDecode(response.body);
+
+        setState(() {
+          _dashInfo = dashInfo;
+        });
+      } else {}
+    } catch (e) {}
   }
 
   Future<void> _logout() async {
@@ -36,6 +53,7 @@ class _HomeScreenState extends State<HomeScreenAdmin> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
+
       appBar: AppBar(
         title: const Text(
           'PharmaConnect',
@@ -45,6 +63,7 @@ class _HomeScreenState extends State<HomeScreenAdmin> {
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
+        automaticallyImplyLeading: false,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -117,7 +136,9 @@ class _HomeScreenState extends State<HomeScreenAdmin> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF2E7D32).withOpacity(0.3),
+                            color: const Color(
+                              0xFF2E7D32,
+                            ).withValues(alpha: 0.3),
                             blurRadius: 15,
                             offset: const Offset(0, 5),
                           ),
@@ -150,9 +171,11 @@ class _HomeScreenState extends State<HomeScreenAdmin> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Bienvenue AdministrateurBailo,',
+                                        'Bienvenue Administrateur,',
                                         style: TextStyle(
-                                          color: Colors.white.withOpacity(0.9),
+                                          color: Colors.white.withValues(
+                                            alpha: 0.9,
+                                          ),
                                           fontSize: 14,
                                         ),
                                       ),
@@ -203,61 +226,42 @@ class _HomeScreenState extends State<HomeScreenAdmin> {
                       childAspectRatio: 1.1,
                       children: [
                         // GESTION PHARMACIE
-                        _buildActionCard(
-                          'Pharmacie',
-                          Icons.local_hospital,
-                          const Color(0xFFE91E63),
-                          '1',
-                          onTap: () {
-                            // TODO: Navigation vers gestion pharmacie
-                          },
-                        ),
-                        // GESTION UTILISATEURS
-                        _buildActionCard(
-                          'Utilisateurs',
-                          Icons.people,
-                          const Color(0xFF3F51B5),
-                          '12',
-                          onTap: () {
-                            // TODO: Navigation vers gestion utilisateurs
-                          },
-                        ),
-                        // GESTION PRODUITS
-                        _buildActionCard(
-                          'Produits',
-                          Icons.medication,
-                          const Color(0xFF2196F3),
-                          '156',
-                          onTap: () {
-                            // TODO: Navigation vers gestion produits
-                          },
-                        ),
-                        // GESTION STOCK
-                        _buildActionCard(
-                          'Stock',
-                          Icons.inventory_2,
-                          const Color(0xFFFF9800),
-                          '89',
-                          onTap: () {
-                            // TODO: Navigation vers gestion stock
-                          },
-                        ),
+                        // _buildActionCard(
+                        //   'Pharmacie',
+                        //   Icons.local_hospital,
+                        //   const Color(0xFFE91E63),
+                        //   _dashInfo?['pharmacies_count']?.toString() ?? '0',
+                        //   onTap: () {
+                        //     // TODO: Navigation vers gestion pharmacie
+                        //   },
+                        // ),
+                        // // GESTION UTILISATEURS
+                        // _buildActionCard(
+                        //   'Utilisateurs',
+                        //   Icons.people,
+                        //   const Color(0xFF3F51B5),
+                        //   _dashInfo?['personnelQuantite']?.toString() ?? '0',
+                        //   onTap: () {
+                        //     // TODO: Navigation vers gestion utilisateurs
+                        //   },
+                        // ),
+
                         // APPROVISIONNEMENT
                         _buildActionCard(
-                          'Approvisionnement',
-                          Icons.local_shipping,
+                          'Valeur vente Journalière',
+                          Icons.shopping_bag_sharp,
                           const Color(0xFF4CAF50),
-                          '24',
+                          '${_dashInfo?['sommeVenteJournalier']?.toString() ?? '0'} FC',
                           onTap: () {
                             // TODO: Navigation vers approvisionnement
                           },
                         ),
                         // VENTES
                         _buildActionCard(
-                          'Ventes',
-                          Icons.point_of_sale,
-                          const Color(0xFF9C27B0),
-                          '45',
+                          'Ventes total',
+                          Icons.shopping_cart,
+                          const Color.fromARGB(255, 228, 30, 30),
+                          '${_dashInfo?['sommeVenteTotal']?.toString() ?? '0'} FC',
                           onTap: () {
                             Navigator.push(
                               context,
@@ -267,12 +271,32 @@ class _HomeScreenState extends State<HomeScreenAdmin> {
                             );
                           },
                         ),
+                        // GESTION PRODUITS
+                        _buildActionCard(
+                          'Produits',
+                          Icons.medication,
+                          const Color(0xFF2196F3),
+                          _dashInfo?['produitQuantite']?.toString() ?? '0',
+                          onTap: () {
+                            // TODO: Navigation vers gestion produits
+                          },
+                        ),
+                        // GESTION STOCK
+                        _buildActionCard(
+                          'Stock disponible',
+                          Icons.inventory_2,
+                          const Color(0xFFFF9800),
+                          _dashInfo?['stockQuantite']?.toString() ?? '0',
+                          onTap: () {
+                            // TODO: Navigation vers gestion stock
+                          },
+                        ),
                         // CLIENTS
                         _buildActionCard(
-                          'Clients',
+                          'Valeur du stock',
                           Icons.people_alt,
                           const Color(0xFFA22448),
-                          '234',
+                          '${_dashInfo?['StockValeurActuel']?.toString() ?? '0'} FC',
                           onTap: () {
                             // TODO: Navigation vers gestion clients
                           },

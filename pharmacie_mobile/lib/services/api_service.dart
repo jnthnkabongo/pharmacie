@@ -223,6 +223,11 @@ class ApiService {
     return response;
   }
 
+  // Recuperer le dashboard
+  static Future<http.Response> getDashboard() async {
+    return await authenticatedRequest('/dashboard', 'GET');
+  }
+
   // Récupérer les stocks
   static Future<http.Response> getStock() async {
     return await authenticatedRequest('/liste-stock', 'GET');

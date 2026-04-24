@@ -130,6 +130,7 @@ class _StockPageState extends State<StockPage> with TickerProviderStateMixin {
         centerTitle: true,
         backgroundColor: const Color(0xFF2E7D32),
         foregroundColor: Colors.white,
+        automaticallyImplyLeading: false,
         elevation: 0,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -304,7 +305,7 @@ class _StockPageState extends State<StockPage> with TickerProviderStateMixin {
   }
 
   Widget _buildSimpleProductCard(Map<String, dynamic> product) {
-    final name = product['produit_nom']?.toString() ?? 'Inconnu';
+    final name = product['produit']?['nom']?.toString() ?? 'Inconnu';
     final int stock = product['quantite'] is num
         ? (product['quantite'] as num).toInt()
         : int.tryParse(product['quantite']?.toString() ?? '0') ?? 0;

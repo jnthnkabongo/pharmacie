@@ -180,6 +180,7 @@ class _AuditPageState extends State<AuditPage> with TickerProviderStateMixin {
         backgroundColor: const Color(0xFF2E7D32),
         foregroundColor: Colors.white,
         elevation: 0,
+        automaticallyImplyLeading: false,
         centerTitle: true,
         flexibleSpace: Container(
           decoration: const BoxDecoration(

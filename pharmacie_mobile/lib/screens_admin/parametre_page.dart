@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pharmacie_mobile/auth/login.dart';
 import 'package:pharmacie_mobile/screens_admin/audit_page_improved.dart';
 import 'package:pharmacie_mobile/screens_admin/categorie_page.dart';
+import 'package:pharmacie_mobile/screens_admin/fournisseurs_page.dart';
 import 'package:pharmacie_mobile/screens_admin/notification_page.dart';
 import 'package:pharmacie_mobile/screens_admin/users_page.dart';
 import 'package:pharmacie_mobile/services/api_service.dart';
@@ -47,6 +48,7 @@ class _ParametresPagePageState extends State<ParametresPage> {
         centerTitle: true,
         backgroundColor: const Color(0xFF2E7D32),
         foregroundColor: Colors.white,
+        automaticallyImplyLeading: false,
         elevation: 0,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -182,12 +184,16 @@ class _ParametresPagePageState extends State<ParametresPage> {
           SliverList(
             delegate: SliverChildListDelegate([
               _buildModernSettingTile(
-                'Sauvegarde',
-                'Backup et restauration',
-                Icons.backup,
+                'Fournisseurs',
+                'Fournisseurs & partenaires',
+                Icons.people,
                 Colors.green,
                 () {
-                  // TODO: Sauvegarde
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const FournisseursPage(),
+                    ),
+                  );
                 },
               ),
               _buildModernSettingTile(

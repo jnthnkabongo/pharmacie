@@ -163,6 +163,7 @@ class _AjouterProduitState extends State<AjouterProduit> {
         ),
         backgroundColor: const Color(0xFF2E7D32),
         foregroundColor: Colors.white,
+        automaticallyImplyLeading: false,
         elevation: 0,
         centerTitle: true,
         flexibleSpace: Container(

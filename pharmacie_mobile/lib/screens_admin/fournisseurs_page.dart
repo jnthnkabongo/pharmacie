@@ -1,42 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:pharmacie_mobile/screens_admin/ajouter_categorie.dart';
+import 'package:pharmacie_mobile/screens_admin/ajouter_fournisseur.dart';
 import 'dart:convert';
 
 import 'package:pharmacie_mobile/services/api_service.dart';
 
-class CategoriePage extends StatefulWidget {
-  const CategoriePage({super.key});
+class FournisseursPage extends StatefulWidget {
+  const FournisseursPage({super.key});
 
   @override
-  State<CategoriePage> createState() => _CategoriePageState();
+  State<FournisseursPage> createState() => _FournisseursPageState();
 }
 
-class _CategoriePageState extends State<CategoriePage> {
+class _FournisseursPageState extends State<FournisseursPage> {
   final TextEditingController _searchController = TextEditingController();
-  List<Map<String, dynamic>> _filteredCategories = [];
-  List<Map<String, dynamic>> _categories = [];
+  List<Map<String, dynamic>> _filteredFournisseurs = [];
+  List<Map<String, dynamic>> _fournisseurs = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadCategories();
+    _loadFournisseurs();
   }
 
-  Future<void> _loadCategories() async {
+  Future<void> _loadFournisseurs() async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final response = await ApiService.getCategories();
+      final response = await ApiService.getFournisseurs();
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         setState(() {
-          _categories = List<Map<String, dynamic>>.from(
-            data['categories'] ?? [],
+          _fournisseurs = List<Map<String, dynamic>>.from(
+            data['fournisseurs'] ?? [],
           );
-          _filteredCategories = _categories;
+          _filteredFournisseurs = _fournisseurs;
           _isLoading = false;
         });
       } else {
@@ -67,8 +68,8 @@ class _CategoriePageState extends State<CategoriePage> {
   void _filterCategories() {
     setState(() {
       final searchLower = _searchController.text.toLowerCase();
-      _filteredCategories = _categories.where((categorie) {
-        final nom = categorie['nom']?.toString().toLowerCase() ?? '';
+      _filteredFournisseurs = _fournisseurs.where((fournisseur) {
+        final nom = fournisseur['nom']?.toString().toLowerCase() ?? '';
         return searchLower.isEmpty || nom.contains(searchLower);
       }).toList();
     });
@@ -79,12 +80,12 @@ class _CategoriePageState extends State<CategoriePage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Catégorie'),
+        title: const Text('Fournisseur'),
         centerTitle: true,
         backgroundColor: const Color(0xFF2E7D32),
         foregroundColor: Colors.white,
-        //automaticallyImplyLeading: false,
         elevation: 0,
+        automaticallyImplyLeading: false,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -103,7 +104,7 @@ class _CategoriePageState extends State<CategoriePage> {
               controller: _searchController,
               onChanged: (value) => _filterCategories(),
               decoration: InputDecoration(
-                hintText: 'Rechercher une catégorie...',
+                hintText: 'Rechercher une fournisseur...',
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -119,13 +120,15 @@ class _CategoriePageState extends State<CategoriePage> {
                 ? const Center(
                     child: CircularProgressIndicator(color: Color(0xFF2E7D32)),
                   )
-                : _filteredCategories.isEmpty
-                ? const Center(child: Text('Aucune catégorie trouvée'))
+                : _filteredFournisseurs.isEmpty
+                ? const Center(
+                    child: Text('Aucune fornisseur trouvée'),
+                  ) //0839025845 - 0899110656 0897024008
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: _filteredCategories.length,
+                    itemCount: _filteredFournisseurs.length,
                     itemBuilder: (context, index) =>
-                        _buildCategoryCard(_filteredCategories[index]),
+                        _buildCategoryCard(_filteredFournisseurs[index]),
                   ),
           ),
         ],
@@ -134,7 +137,7 @@ class _CategoriePageState extends State<CategoriePage> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const AjouterCategorie()),
+            MaterialPageRoute(builder: (context) => const AjouterFournisseur()),
           );
         },
         backgroundColor: const Color(0xFF2E7D32),
@@ -143,11 +146,12 @@ class _CategoriePageState extends State<CategoriePage> {
     );
   }
 
-  Widget _buildCategoryCard(Map<String, dynamic> category) {
-    final id = category['id']?.toString() ?? '0';
-    final name = category['nom']?.toString() ?? 'Inconnu';
-    final description = category['description']?.toString() ?? '';
-    final createdAt = category['created_at']?.toString() ?? '';
+  Widget _buildCategoryCard(Map<String, dynamic> fournisseur) {
+    final id = fournisseur['id']?.toString() ?? '0';
+    final name = fournisseur['nom']?.toString() ?? 'Inconnu';
+    final telephone = fournisseur['telephone']?.toString() ?? '';
+    final adresse = fournisseur['adresse']?.toString() ?? '';
+    final createdAt = fournisseur['created_at']?.toString() ?? '';
 
     // Formater la date
     String formattedDate = '';
@@ -198,25 +202,39 @@ class _CategoriePageState extends State<CategoriePage> {
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 4),
-              if (description.isNotEmpty)
-                Text(
-                  description,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+              if (telephone.isNotEmpty)
+                Row(
+                  children: [
+                    SizedBox(height: 4),
+                    Icon(Icons.phone, size: 18, color: Colors.grey[500]),
+                    SizedBox(width: 10),
+                    Text(
+                      telephone,
+                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
-              // const SizedBox(height: 8),
-              // Row(
-              //   children: [
-              //     Icon(Icons.calendar_today, size: 14, color: Colors.grey[500]),
-              //     const SizedBox(width: 4),
-              //     Text(
-              //       'Créé le $formattedDate',
-              //       style: TextStyle(color: Colors.grey[500], fontSize: 12),
-              //     ),
-              //   ],
-              // ),
+
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Icon(Icons.calendar_today, size: 14, color: Colors.grey[500]),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Créé le $formattedDate',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 11),
+                  ),
+                  const SizedBox(width: 5),
+                  Icon(Icons.email, size: 14, color: Colors.grey[500]),
+                  const SizedBox(width: 4),
+                  Text(
+                    adresse.isNotEmpty ? adresse : 'Email',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 11),
+                  ),
+                ],
+              ),
             ],
           ),
           trailing: PopupMenuButton<String>(
