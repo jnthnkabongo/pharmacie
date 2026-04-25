@@ -186,6 +186,7 @@ class ApiController extends Controller
             ->value('total_value') ?? 0;
         $peraonnelQuantite = User::count();
         $produitQuatite = Produit::count();
+        $fournisseurQuantite = Fournisseur::count();
         $venteQuantite = Vente::count();
         $sommeVenteJournalier = Vente::whereDate('created_at', today())->sum('montant_total');
         $sommeVenteTotal = Vente::sum('montant_total');
@@ -202,7 +203,8 @@ class ApiController extends Controller
             'sommeVenteJournalier' => $sommeVenteJournalier,
             'sommeVenteTotal' => $sommeVenteTotal,
             'sommeQuantiteStockattendu' => $sommeQuantiteStockattendu,
-            'sommeQuantiteStockvaleur' => $sommeQuantiteStockvaleur
+            'sommeQuantiteStockvaleur' => $sommeQuantiteStockvaleur,
+            'fournisseurQuantite' => $fournisseurQuantite
         ], 200);
 
     }
@@ -839,6 +841,7 @@ class ApiController extends Controller
             'produits.*.fournisseur_id' => 'nullable|exists:fournisseurs,id',
             'produits.*.code_barre' => 'nullable|string|max:50',
             'produits.*.date_expiration' => 'nullable|date',
+            'produits.*.pharmacie_id' => 'nullable|exists:pharmacies,id',
         ]);
 
         try {
@@ -870,13 +873,15 @@ class ApiController extends Controller
                         'prix_vente' => $produitData['prix_vente'],
                         'categorie_id' => $produitData['categorie_id'] ?? null,
                         'fournisseur_id' => $produitData['fournisseur_id'] ?? null,
-                        'pharmacie_id' => $user->pharmacie_id,
+                        //'pharmacie_id' => $produitData['pharmacie_id'] ?? $user->pharmacie_id,
+                        'pharmacie_id' => Auth::user()->pharmacie_id,
                         'code_barre' => $produitData['code_barre'] ?? null,
                         'date_expiration' => $produitData['date_expiration'] ?? null,
                     ]);
 
                     // Créer le stock initial
                     Stock::create([
+                        'pharmacie_id' => Auth::user()->pharmacie_id,
                         'produit_id' => $produit->id,
                         'quantite' => $produitData['quantite'],
                         'seuil_alerte' => $produitData['seuil_alerte'] ?? 10,
