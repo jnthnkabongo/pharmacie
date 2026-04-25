@@ -96,7 +96,7 @@ class _NotificationPageState extends State<NotificationPage> {
         backgroundColor: const Color(0xFF2E7D32),
         foregroundColor: Colors.white,
         elevation: 0,
-        automaticallyImplyLeading: false,
+        //automaticallyImplyLeading: false,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(

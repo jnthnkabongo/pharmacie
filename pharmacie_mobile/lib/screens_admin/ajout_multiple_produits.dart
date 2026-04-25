@@ -131,9 +131,20 @@ class _AjoutMultipleProduitsState extends State<AjoutMultipleProduits> {
       final response = await ApiService.addMultipleProduits(produitsData);
 
       if (mounted) {
+        print('🔍 Réponse API status: ${response.statusCode}');
+        print('📄 Réponse API body: ${response.body}');
+
         final responseData = jsonDecode(response.body);
-        final successCount = responseData['statistiques']['succes'] ?? 0;
-        final errorCount = responseData['statistiques']['echecs'] ?? 0;
+        print('📊 ResponseData complet: $responseData');
+
+        final statistiques =
+            responseData['statistiques'] as Map<String, dynamic>? ?? {};
+        print('📈 Statistiques: $statistiques');
+
+        final successCount = statistiques['succes'] as int? ?? 0;
+        final errorCount = statistiques['echecs'] as int? ?? 0;
+
+        print('✅ Succès: $successCount, ❌ Erreurs: $errorCount');
         final errors = List<String>.from(
           (responseData['erreurs'] as List?)?.map(
                 (e) => '${e['nom']}: ${e['message']}',
@@ -224,7 +235,7 @@ class _AjoutMultipleProduitsState extends State<AjoutMultipleProduits> {
         ),
         backgroundColor: const Color(0xFF2E7D32),
         foregroundColor: Colors.white,
-        automaticallyImplyLeading: false,
+        //automaticallyImplyLeading: false,
         elevation: 0,
         centerTitle: true,
         flexibleSpace: Container(
@@ -308,6 +319,7 @@ class _AjoutMultipleProduitsState extends State<AjoutMultipleProduits> {
                 ),
               ),
             ),
+            SizedBox(height: 30),
           ],
         ),
       ),
@@ -436,7 +448,7 @@ class _AjoutMultipleProduitsState extends State<AjoutMultipleProduits> {
                         controller: produit.prixVenteController,
                         decoration: const InputDecoration(
                           labelText: 'Prix de vente (FC) *',
-                          prefixIcon: Icon(Icons.attach_money),
+                          prefixIcon: Icon(Icons.payment),
                           border: OutlineInputBorder(),
                           isDense: true,
                         ),

@@ -294,8 +294,8 @@ class _HomeScreenState extends State<HomeScreenAdmin> {
                         // CLIENTS
                         _buildActionCard(
                           'Valeur du stock',
-                          Icons.people_alt,
-                          const Color(0xFFA22448),
+                          Icons.payment_outlined,
+                          const Color.fromARGB(255, 3, 28, 119),
                           '${_dashInfo?['StockValeurActuel']?.toString() ?? '0'} FC',
                           onTap: () {
                             // TODO: Navigation vers gestion clients
@@ -303,34 +303,34 @@ class _HomeScreenState extends State<HomeScreenAdmin> {
                         ),
                         // RAPPORTS
                         _buildActionCard(
-                          'Rapports',
-                          Icons.analytics,
-                          const Color(0xFF607D8B),
-                          '8',
+                          'Fournisseurs',
+                          Icons.people_sharp,
+                          const Color.fromARGB(255, 103, 164, 5),
+                          '${_dashInfo?['fournisseurQuantite']?.toString() ?? '0'}',
                           onTap: () {
                             // TODO: Navigation vers rapports
                           },
                         ),
                         // AUDIT
-                        _buildActionCard(
-                          'Audit',
-                          Icons.history,
-                          const Color(0xFF9E9E9E),
-                          '156',
-                          onTap: () {
-                            // TODO: Navigation vers journal d\'audit
-                          },
-                        ),
-                        // NOTIFICATIONS
-                        _buildActionCard(
-                          'Notifications',
-                          Icons.notifications_active,
-                          const Color(0xFFFF5722),
-                          '3',
-                          onTap: () {
-                            // TODO: Navigation vers notifications
-                          },
-                        ),
+                        // _buildActionCard(
+                        //   'Audit',
+                        //   Icons.history,
+                        //   const Color(0xFF9E9E9E),
+                        //   '156',
+                        //   onTap: () {
+                        //     // TODO: Navigation vers journal d\'audit
+                        //   },
+                        // ),
+                        // // NOTIFICATIONS
+                        // _buildActionCard(
+                        //   'Fournisseurs',
+                        //   Icons.notifications_active,
+                        //   const Color(0xFFFF5722),
+                        //   '3',
+                        //   onTap: () {
+                        //     // TODO: Navigation vers notifications
+                        //   },
+                        // ),
                       ],
                     ),
                   ],

@@ -163,7 +163,7 @@ class _AjouterProduitState extends State<AjouterProduit> {
         ),
         backgroundColor: const Color(0xFF2E7D32),
         foregroundColor: Colors.white,
-        automaticallyImplyLeading: false,
+        //automaticallyImplyLeading: false,
         elevation: 0,
         centerTitle: true,
         flexibleSpace: Container(
@@ -198,7 +198,7 @@ class _AjouterProduitState extends State<AjouterProduit> {
             children: [
               // Section Informations générales
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
@@ -221,7 +221,7 @@ class _AjouterProduitState extends State<AjouterProduit> {
                         color: Color(0xFF2E7D32),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
                     TextFormField(
                       controller: _nomController,
                       decoration: const InputDecoration(
@@ -236,7 +236,7 @@ class _AjouterProduitState extends State<AjouterProduit> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 10),
                     TextFormField(
                       controller: _descriptionController,
                       decoration: const InputDecoration(
@@ -244,9 +244,9 @@ class _AjouterProduitState extends State<AjouterProduit> {
                         prefixIcon: Icon(Icons.description),
                         border: OutlineInputBorder(),
                       ),
-                      maxLines: 3,
+                      maxLines: 2,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 10),
                     Row(
                       children: [
                         Expanded(
@@ -270,13 +270,13 @@ class _AjouterProduitState extends State<AjouterProduit> {
                             },
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: TextFormField(
                             controller: _prixVenteController,
                             decoration: const InputDecoration(
                               labelText: 'Prix de vente (FC) *',
-                              prefixIcon: Icon(Icons.attach_money),
+                              prefixIcon: Icon(Icons.payment),
                               border: OutlineInputBorder(),
                             ),
                             keyboardType: TextInputType.number,
@@ -294,7 +294,7 @@ class _AjouterProduitState extends State<AjouterProduit> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 10),
                     TextFormField(
                       controller: _codeBarreController,
                       decoration: const InputDecoration(
@@ -303,7 +303,7 @@ class _AjouterProduitState extends State<AjouterProduit> {
                         border: OutlineInputBorder(),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 10),
                     TextFormField(
                       controller: _dateExpirationController,
                       decoration: const InputDecoration(
@@ -330,11 +330,11 @@ class _AjouterProduitState extends State<AjouterProduit> {
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
 
               // Section Catégorie et Fournisseur
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
@@ -383,7 +383,7 @@ class _AjouterProduitState extends State<AjouterProduit> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 10),
                     DropdownButtonFormField<String>(
                       initialValue: _selectedFournisseur,
                       decoration: const InputDecoration(
@@ -409,11 +409,11 @@ class _AjouterProduitState extends State<AjouterProduit> {
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
 
               // Section Stock
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
@@ -436,7 +436,7 @@ class _AjouterProduitState extends State<AjouterProduit> {
                         color: Color(0xFF2E7D32),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
                     Row(
                       children: [
                         Expanded(
@@ -460,7 +460,7 @@ class _AjouterProduitState extends State<AjouterProduit> {
                             },
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: TextFormField(
                             controller: _seuilAlerteController,
@@ -488,7 +488,7 @@ class _AjouterProduitState extends State<AjouterProduit> {
                 ),
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(height: 10),
 
               // Bouton de soumission
               SizedBox(
@@ -514,6 +514,7 @@ class _AjouterProduitState extends State<AjouterProduit> {
                         ),
                 ),
               ),
+              SizedBox(height: 30),
             ],
           ),
         ),

@@ -162,92 +162,34 @@ class _ProduitPageState extends State<ProduitPage>
           ),
         ],
       ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          // Sous-boutons
-          if (_isFabExpanded) ...[
-            FloatingActionButton.extended(
-              onPressed: () async {
-                setState(() {
-                  _isFabExpanded = false;
-                });
-                _animationController.reverse();
-
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AjouterProduit(),
-                  ),
-                );
-
-                if (result == true) {
-                  _loadProduits(); // Rafraîchir la liste des produits
-                }
-              },
-              backgroundColor: Colors.green,
-              icon: const Icon(Icons.add, size: 20, color: Colors.white),
-              label: const Text(
-                'Ajouter',
-                style: TextStyle(fontSize: 12, color: Colors.white),
-              ),
-            ),
-
-            const SizedBox(height: 8),
-            FloatingActionButton.extended(
-              onPressed: () {
-                setState(() {
-                  _isFabExpanded = false;
-                });
-                _animationController.reverse();
-                // TODO: Importer des produits
-              },
-              backgroundColor: Colors.green,
-              icon: const Icon(Icons.people, size: 20, color: Colors.white),
-              label: const Text(
-                'Fournisseur',
-                style: TextStyle(fontSize: 12, color: Colors.white),
-              ),
-            ),
-            const SizedBox(height: 8),
-            FloatingActionButton.extended(
-              onPressed: () {
-                setState(() {
-                  _isFabExpanded = false;
-                });
-                _animationController.reverse();
-                // TODO: Exporter des produits
-              },
-              backgroundColor: Colors.green,
-              icon: const Icon(Icons.money, size: 20, color: Colors.white),
-              label: const Text(
-                'Achats',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-
-          // Bouton principal
-          FloatingActionButton(
-            onPressed: () {
-              setState(() {
-                _isFabExpanded = !_isFabExpanded;
-              });
-              if (_isFabExpanded) {
-                _animationController.forward();
-              } else {
-                _animationController.reverse();
-              }
-            },
-            backgroundColor: const Color(0xFF2E7D32),
-            child: AnimatedIcon(
-              icon: AnimatedIcons.menu_close,
-              progress: _animation,
-              color: Colors.white,
-            ),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF2E7D32), Color(0xFF43A047)],
           ),
-        ],
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.green.withOpacity(0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),  
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const AjouterProduit()),
+            );
+            if (result == true) {
+              _loadProduits(); // On rafraîchit si un produit a été ajouté
+            }
+          },
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: const Icon(Icons.add, color: Colors.white, size: 28),
+        ),
       ),
     );
   }

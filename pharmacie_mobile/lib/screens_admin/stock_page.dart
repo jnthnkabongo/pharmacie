@@ -211,73 +211,73 @@ class _StockPageState extends State<StockPage> with TickerProviderStateMixin {
           ),
         ],
       ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          // Sous-boutons
-          if (_isFabExpanded) ...[
-            FloatingActionButton.extended(
-              onPressed: () {
-                setState(() {
-                  _isFabExpanded = false;
-                });
-                _animationController.reverse();
-                // TODO: Faire inventaire
-              },
-              backgroundColor: Colors.blue,
-              icon: const Icon(Icons.inventory_2, size: 20),
-              label: const Text('Inventaire', style: TextStyle(fontSize: 12)),
-            ),
-            const SizedBox(height: 8),
-            FloatingActionButton.extended(
-              onPressed: () {
-                setState(() {
-                  _isFabExpanded = false;
-                });
-                _animationController.reverse();
-                // TODO: Ajuster stock
-              },
-              backgroundColor: Colors.orange,
-              icon: const Icon(Icons.tune, size: 20),
-              label: const Text('Ajuster', style: TextStyle(fontSize: 12)),
-            ),
-            const SizedBox(height: 8),
-            FloatingActionButton.extended(
-              onPressed: () {
-                setState(() {
-                  _isFabExpanded = false;
-                });
-                _animationController.reverse();
-                // TODO: Ajouter produit
-              },
-              backgroundColor: Colors.purple,
-              icon: const Icon(Icons.add, size: 20),
-              label: const Text('Ajouter', style: TextStyle(fontSize: 12)),
-            ),
-            const SizedBox(height: 16),
-          ],
+      // floatingActionButton: Column(
+      //   mainAxisAlignment: MainAxisAlignment.end,
+      //   children: [
+      //     // Sous-boutons
+      //     if (_isFabExpanded) ...[
+      //       FloatingActionButton.extended(
+      //         onPressed: () {
+      //           setState(() {
+      //             _isFabExpanded = false;
+      //           });
+      //           _animationController.reverse();
+      //           // TODO: Faire inventaire
+      //         },
+      //         backgroundColor: Colors.blue,
+      //         icon: const Icon(Icons.inventory_2, size: 20),
+      //         label: const Text('Inventaire', style: TextStyle(fontSize: 12)),
+      //       ),
+      //       const SizedBox(height: 8),
+      //       FloatingActionButton.extended(
+      //         onPressed: () {
+      //           setState(() {
+      //             _isFabExpanded = false;
+      //           });
+      //           _animationController.reverse();
+      //           // TODO: Ajuster stock
+      //         },
+      //         backgroundColor: Colors.orange,
+      //         icon: const Icon(Icons.tune, size: 20),
+      //         label: const Text('Ajuster', style: TextStyle(fontSize: 12)),
+      //       ),
+      //       const SizedBox(height: 8),
+      //       FloatingActionButton.extended(
+      //         onPressed: () {
+      //           setState(() {
+      //             _isFabExpanded = false;
+      //           });
+      //           _animationController.reverse();
+      //           // TODO: Ajouter produit
+      //         },
+      //         backgroundColor: Colors.purple,
+      //         icon: const Icon(Icons.add, size: 20),
+      //         label: const Text('Ajouter', style: TextStyle(fontSize: 12)),
+      //       ),
+      //       const SizedBox(height: 16),
+      //     ],
 
-          // Bouton principal
-          FloatingActionButton(
-            onPressed: () {
-              setState(() {
-                _isFabExpanded = !_isFabExpanded;
-              });
-              if (_isFabExpanded) {
-                _animationController.forward();
-              } else {
-                _animationController.reverse();
-              }
-            },
-            backgroundColor: const Color(0xFF2E7D32),
-            child: AnimatedIcon(
-              icon: AnimatedIcons.menu_close,
-              progress: _animation,
-              color: Colors.white,
-            ),
-          ),
-        ],
-      ),
+      //     // Bouton principal
+      //     FloatingActionButton(
+      //       onPressed: () {
+      //         setState(() {
+      //           _isFabExpanded = !_isFabExpanded;
+      //         });
+      //         if (_isFabExpanded) {
+      //           _animationController.forward();
+      //         } else {
+      //           _animationController.reverse();
+      //         }
+      //       },
+      //       backgroundColor: const Color(0xFF2E7D32),
+      //       child: AnimatedIcon(
+      //         icon: AnimatedIcons.menu_close,
+      //         progress: _animation,
+      //         color: Colors.white,
+      //       ),
+      //     ),
+      //   ],
+      // ),
     );
   }
 
