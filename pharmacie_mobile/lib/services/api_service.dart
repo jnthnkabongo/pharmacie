@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  //static const String baseUrl = 'http://192.168.123.34:8000/api';
+  //static const String baseUrl = 'https://pharmacie.alwaysdata.net/api';
   //static const String baseUrl = 'http://10.0.2.2:8000/api';
   static String get baseUrl {
     if (kIsWeb) {
@@ -315,6 +315,23 @@ class ApiService {
       'POST',
       body: produitData,
     );
+  }
+
+  // Modifier un produit
+  static Future<http.Response> updateProduit(
+    String id,
+    Map<String, dynamic> produitData,
+  ) async {
+    return await authenticatedRequest(
+      '/update-produit/$id',
+      'PUT',
+      body: produitData,
+    );
+  }
+
+  // Supprimer un produit
+  static Future<http.Response> deleteProduit(String id) async {
+    return await authenticatedRequest('/delete-produit/$id', 'DELETE');
   }
 
   // Récupérer les catégories

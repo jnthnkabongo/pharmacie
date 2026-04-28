@@ -173,7 +173,7 @@ class _ProduitPageState extends State<ProduitPage>
               color: Colors.green.withOpacity(0.3),
               blurRadius: 15,
               offset: const Offset(0, 8),
-            ),  
+            ),
           ],
         ),
         child: FloatingActionButton(
@@ -289,14 +289,18 @@ class _ProduitPageState extends State<ProduitPage>
         trailing: PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert),
           onSelected: (value) {
-            // TODO: Gérer les actions
+            if (value == 'edit') {
+              _showEditModalBottomSheet(context, product);
+            } else if (value == 'stock') {
+              _showDeleteConfirmation(context, product);
+            }
           },
           itemBuilder: (context) => [
             const PopupMenuItem(
               value: 'edit',
               child: Row(
                 children: [
-                  Icon(Icons.edit, size: 16),
+                  Icon(Icons.edit, size: 16, color: Colors.orange),
                   SizedBox(width: 8),
                   Text('Modifier'),
                 ],
@@ -306,19 +310,9 @@ class _ProduitPageState extends State<ProduitPage>
               value: 'stock',
               child: Row(
                 children: [
-                  Icon(Icons.inventory, size: 16),
+                  Icon(Icons.delete, size: 16, color: Colors.red),
                   SizedBox(width: 8),
-                  Text('Voir stock'),
-                ],
-              ),
-            ),
-            PopupMenuItem(
-              value: isActive ? 'disable' : 'enable',
-              child: Row(
-                children: [
-                  Icon(isActive ? Icons.block : Icons.check_circle, size: 16),
-                  const SizedBox(width: 8),
-                  Text(isActive ? 'Désactiver' : 'Activer'),
+                  Text('Supprimer'),
                 ],
               ),
             ),
@@ -326,5 +320,373 @@ class _ProduitPageState extends State<ProduitPage>
         ),
       ),
     );
+  }
+
+  void _showEditModalBottomSheet(
+    BuildContext context,
+    Map<String, dynamic> product,
+  ) {
+    final _nomController = TextEditingController(
+      text: product['nom']?.toString() ?? '',
+    );
+    final _descriptionController = TextEditingController(
+      text: product['description']?.toString() ?? '',
+    );
+    final _prixAchatController = TextEditingController(
+      text: product['prix_achat']?.toString() ?? '',
+    );
+    final _prixVenteController = TextEditingController(
+      text: product['prix_vente']?.toString() ?? '',
+    );
+    final _codeBarreController = TextEditingController(
+      text: product['code_barre']?.toString() ?? '',
+    );
+    final _dateExpirationController = TextEditingController(
+      text: _formatDate(product['date_expiration']),
+    );
+    print('📦 Produit complet: $product');
+    print('📊 Stock brut: ${product['stock']}');
+    print('📅 Date expiration brute: ${product['date_expiration']}');
+
+    final _stockController = TextEditingController(
+      text: product['stock']?['quantite']?.toString() ?? '0',
+    );
+    final _seuilAlerteController = TextEditingController(
+      text: product['seuil_alerte']?.toString() ?? '10',
+    );
+
+    print('📦 Stock controller: "${_stockController.text}"');
+    print('📅 Date controller: "${_dateExpirationController.text}"');
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.6,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Modifier le produit',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2E7D32),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close, color: Colors.grey),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              TextFormField(
+                controller: _nomController,
+                decoration: const InputDecoration(
+                  labelText: 'Nom du produit *',
+                  prefixIcon: Icon(Icons.medication),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              TextFormField(
+                controller: _descriptionController,
+                decoration: const InputDecoration(
+                  labelText: 'Description',
+                  prefixIcon: Icon(Icons.description),
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 10),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _prixAchatController,
+                      decoration: const InputDecoration(
+                        labelText: 'Prix d\'achat (FC)',
+                        prefixIcon: Icon(Icons.shopping_cart),
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _prixVenteController,
+                      decoration: const InputDecoration(
+                        labelText: 'Prix de vente (FC)',
+                        prefixIcon: Icon(Icons.payment),
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _stockController,
+                      decoration: const InputDecoration(
+                        labelText: 'Quantité en stock',
+                        prefixIcon: Icon(Icons.inventory),
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _seuilAlerteController,
+                      decoration: const InputDecoration(
+                        labelText: 'Seuil d\'alerte',
+                        prefixIcon: Icon(Icons.warning),
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              TextFormField(
+                controller: _codeBarreController,
+                decoration: const InputDecoration(
+                  labelText: 'Code barre',
+                  prefixIcon: Icon(Icons.qr_code),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              TextFormField(
+                controller: _dateExpirationController,
+                decoration: const InputDecoration(
+                  labelText: 'Date d\'expiration',
+                  prefixIcon: Icon(Icons.calendar_today),
+                  border: OutlineInputBorder(),
+                ),
+                readOnly: true,
+                onTap: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime(2030),
+                  );
+                  if (date != null) {
+                    _dateExpirationController.text =
+                        '${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year}';
+                  }
+                },
+              ),
+              const SizedBox(height: 10),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey,
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                      ),
+                      child: const Text(
+                        'Annuler',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (_nomController.text.trim().isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Le nom du produit est requis'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                          return;
+                        }
+
+                        try {
+                          final response = await ApiService.updateProduit(
+                            product['id'].toString(),
+                            {
+                              'nom': _nomController.text.trim(),
+                              'description': _descriptionController.text.trim(),
+                              'prix_achat': _prixAchatController.text.trim(),
+                              'prix_vente': _prixVenteController.text.trim(),
+                              'code_barre': _codeBarreController.text.trim(),
+                              'date_expiration': _dateExpirationController.text
+                                  .trim(),
+                              'quantite': _stockController.text.trim(),
+                              'seuil_alerte': _seuilAlerteController.text
+                                  .trim(),
+                            },
+                          );
+
+                          Navigator.pop(context);
+
+                          if (response.statusCode == 200) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Produit modifié avec succès'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                            _loadProduits();
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Erreur lors de la modification: ${response.body}',
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Erreur: $e'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2E7D32),
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                      ),
+                      child: const Text(
+                        'Enregistrer',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(
+    BuildContext context,
+    Map<String, dynamic> product,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmer la suppression'),
+        content: Text(
+          'Êtes-vous sûr de vouloir supprimer le produit "${product['nom']}" ?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () async {
+              try {
+                final response = await ApiService.deleteProduit(
+                  product['id'].toString(),
+                );
+
+                Navigator.pop(context);
+
+                if (response.statusCode == 200) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Produit supprimé avec succès'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                  _loadProduits();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Erreur lors de la suppression: ${response.body}',
+                      ),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              } catch (e) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Erreur: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            child: const Text('Supprimer', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(dynamic dateValue) {
+    if (dateValue == null || dateValue.toString().isEmpty) {
+      return '';
+    }
+
+    try {
+      // Essayer de parser en DateTime (gère les formats ISO 8601 comme "2027-04-24T00:00:00.000000Z")
+      final dateTime = DateTime.parse(dateValue.toString());
+      return '${dateTime.day.toString().padLeft(2, '0')}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.year}';
+    } catch (e) {
+      // Si le parsing échoue, essayer le format simple YYYY-MM-DD
+      try {
+        final dateString = dateValue.toString();
+        if (dateString.contains('-') && dateString.length >= 10) {
+          final year = dateString.substring(0, 4);
+          final month = dateString.substring(5, 7);
+          final day = dateString.substring(8, 10);
+          return '$day-$month-$year';
+        }
+      } catch (e2) {
+        // En cas d'erreur double, retourner la valeur brute
+        return dateValue.toString();
+      }
+
+      return dateValue.toString();
+    }
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:pharmacie_mobile/services/api_service.dart';
 
@@ -10,12 +12,14 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   Map<String, dynamic>? _userInfo;
+  Map<String, dynamic>? _dashInfo;
   int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _loadUserInfo();
+    _loadDashboard();
   }
 
   Future<void> _loadUserInfo() async {
@@ -23,6 +27,20 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _userInfo = userInfo;
     });
+  }
+
+  Future<void> _loadDashboard() async {
+    try {
+      final response = await ApiService.getDashboard();
+
+      if (response.statusCode == 200) {
+        final dashInfo = jsonDecode(response.body);
+
+        setState(() {
+          _dashInfo = dashInfo;
+        });
+      } else {}
+    } catch (e) {}
   }
 
   Future<void> _logout() async {
@@ -99,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Carte de bienvenue
-                    SizedBox(height: 20),
+                    SizedBox(height: 5),
                     Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
@@ -190,108 +208,120 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
 
                     const SizedBox(height: 24),
-
-                    // Statistiques rapides
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildStatCard(
-                            'Produits',
-                            Icons.medication,
-                            const Color(0xFF2196F3),
-                            '156',
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildStatCard(
-                            'Stock',
-                            Icons.inventory,
-                            const Color(0xFFFF9800),
-                            '89',
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildStatCard(
-                            'Ventes',
-                            Icons.point_of_sale,
-                            const Color(0xFF4CAF50),
-                            '45',
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildStatCard(
-                            'Clients',
-                            Icons.people,
-                            const Color(0xFF9C27B0),
-                            '234',
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Actions rapides
-                    const Text(
-                      'Actions rapides',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1F2937),
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
                     GridView.count(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       crossAxisCount: 2,
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
-                      childAspectRatio: 1.2,
+                      childAspectRatio: 1.1,
                       children: [
+                        // GESTION PHARMACIE
+                        // _buildActionCard(
+                        //   'Pharmacie',
+                        //   Icons.local_hospital,
+                        //   const Color(0xFFE91E63),
+                        //   _dashInfo?['pharmacies_count']?.toString() ?? '0',
+                        //   onTap: () {
+                        //     // TODO: Navigation vers gestion pharmacie
+                        //   },
+                        // ),
+                        // // GESTION UTILISATEURS
+                        // _buildActionCard(
+                        //   'Utilisateurs',
+                        //   Icons.people,
+                        //   const Color(0xFF3F51B5),
+                        //   _dashInfo?['personnelQuantite']?.toString() ?? '0',
+                        //   onTap: () {
+                        //     // TODO: Navigation vers gestion utilisateurs
+                        //   },
+                        // ),
+
+                        // APPROVISIONNEMENT
                         _buildActionCard(
-                          'Nouveau Produit',
-                          Icons.add_circle,
-                          const Color(0xFF2196F3),
-                          () {
-                            // TODO: Navigation vers ajout produit
+                          'Valeur vente Journalière',
+                          Icons.shopping_bag_sharp,
+                          const Color(0xFF4CAF50),
+                          '${_dashInfo?['sommeVenteJournalier']?.toString() ?? '0'} FC',
+                          onTap: () {
+                            // TODO: Navigation vers approvisionnement
                           },
                         ),
+                        // VENTES
                         _buildActionCard(
-                          'Gérer Stock',
+                          'Ventes total',
+                          Icons.shopping_cart,
+                          const Color.fromARGB(255, 228, 30, 30),
+                          '${_dashInfo?['sommeVenteTotal']?.toString() ?? '0'} FC',
+                          // onTap: () {
+                          //   Navigator.push(
+                          //     context,
+                          //     MaterialPageRoute(
+                          //       builder: (context) => const VentePage(),
+                          //     ),
+                          //   );
+                          // },
+                        ),
+                        // GESTION PRODUITS
+                        _buildActionCard(
+                          'Produits',
+                          Icons.medication,
+                          const Color(0xFF2196F3),
+                          _dashInfo?['produitQuantite']?.toString() ?? '0',
+                          onTap: () {
+                            // TODO: Navigation vers gestion produits
+                          },
+                        ),
+                        // GESTION STOCK
+                        _buildActionCard(
+                          'Stock disponible',
                           Icons.inventory_2,
                           const Color(0xFFFF9800),
-                          () {
+                          _dashInfo?['stockQuantite']?.toString() ?? '0',
+                          onTap: () {
                             // TODO: Navigation vers gestion stock
                           },
                         ),
+                        // CLIENTS
                         _buildActionCard(
-                          'Nouvelle Vente',
-                          Icons.shopping_cart,
-                          const Color(0xFF4CAF50),
-                          () {
-                            // TODO: Navigation vers nouvelle vente
+                          'Approvionnement en attente',
+                          Icons.production_quantity_limits_sharp,
+                          const Color.fromARGB(255, 3, 28, 119),
+                          '${_dashInfo?['sommeApprovionnement']?.toString() ?? '0'}',
+                          onTap: () {
+                            // TODO: Navigation vers gestion clients
                           },
                         ),
+                        // RAPPORTS
                         _buildActionCard(
-                          'Clients',
-                          Icons.people_alt,
-                          const Color(0xFF9C27B0),
-                          () {
-                            // TODO: Navigation vers clients
+                          'Fournisseurs',
+                          Icons.people_sharp,
+                          const Color.fromARGB(255, 103, 164, 5),
+                          '${_dashInfo?['fournisseurQuantite']?.toString() ?? '0'}',
+                          onTap: () {
+                            // TODO: Navigation vers rapports
                           },
                         ),
+                        // AUDIT
+                        // _buildActionCard(
+                        //   'Audit',
+                        //   Icons.history,
+                        //   const Color(0xFF9E9E9E),
+                        //   '156',
+                        //   onTap: () {
+                        //     // TODO: Navigation vers journal d\'audit
+                        //   },
+                        // ),
+                        // // NOTIFICATIONS
+                        // _buildActionCard(
+                        //   'Fournisseurs',
+                        //   Icons.notifications_active,
+                        //   const Color(0xFFFF5722),
+                        //   '3',
+                        //   onTap: () {
+                        //     // TODO: Navigation vers notifications
+                        //   },
+                        // ),
                       ],
                     ),
                   ],
@@ -301,102 +331,48 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildStatCard(
-    String title,
-    IconData icon,
-    Color color,
-    String value,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              const Spacer(),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF6B7280),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildActionCard(
     String title,
     IconData icon,
     Color color,
-    VoidCallback onTap,
-  ) {
-    return Card(
-      elevation: 2,
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(18),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(icon, color: color, size: 28),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
+    String value, {
+    VoidCallback? onTap,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
+        ],
+        color: Colors.white,
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        splashColor: color.withOpacity(0.1),
+        highlightColor: color.withOpacity(0.05),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 45),
+            const SizedBox(height: 12),
+            Text(
+              value,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              title,
+              style: const TextStyle(color: Colors.grey, fontSize: 11),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       ),
     );

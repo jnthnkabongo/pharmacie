@@ -192,6 +192,7 @@ class ApiController extends Controller
         $sommeVenteTotal = Vente::sum('montant_total');
         $sommeQuantiteStockattendu = Produit::sum('prix_vente');
         $sommeQuantiteStockvaleur = Produit::sum('prix_achat');
+        $sommeApprovionnement = Approvisionnement::count();
 
         return response()->json([
             'message' => 'Les differents valeurs',
@@ -204,7 +205,8 @@ class ApiController extends Controller
             'sommeVenteTotal' => $sommeVenteTotal,
             'sommeQuantiteStockattendu' => $sommeQuantiteStockattendu,
             'sommeQuantiteStockvaleur' => $sommeQuantiteStockvaleur,
-            'fournisseurQuantite' => $fournisseurQuantite
+            'fournisseurQuantite' => $fournisseurQuantite,
+            'sommeApprovionnement' => $sommeApprovionnement
         ], 200);
 
     }
@@ -606,12 +608,13 @@ class ApiController extends Controller
                 'fournisseur_id' => $request->fournisseur_id,
                 'user_id' => $user->id,
                 'montant_total' => $request->montant_total,
-                'pharmacie_id' => $user->pharmacie_id,
+                'pharmacie_id' => Auth::user()->pharmacie_id,
             ]);
 
             foreach ($request->articles as $article) {
                 // Création du détail d'approvisionnement
                 ApprovisionnementDetail::create([
+                    'pharmacie_id' => Auth::user()->pharmacie_id,
                     'approvisionnement_id' => $approvisionnement->id,
                     'produit_id' => $article['produit_id'],
                     'quantite' => $article['quantite'],
@@ -635,7 +638,7 @@ class ApiController extends Controller
 
                 // Création du mouvement de stock (entrée)
                 MouvementStock::create([
-                    'pharmacie_id' => $user->pharmacie_id,
+                    'pharmacie_id' => Auth::user()->pharmacie_id,
                     'produit_id' => $article['produit_id'],
                     'type' => 'entree',
                     'quantite' => $article['quantite'],
@@ -753,7 +756,7 @@ class ApiController extends Controller
         ], 201);
     }
 
-    //Ajout d'un produit
+    //============= CRUD Produit =====================//
     public function addProduit(Request $request)
     {
         $user = Auth::user();
@@ -930,6 +933,124 @@ class ApiController extends Controller
                 'erreurs' => [['message' => 'Erreur générale: ' . $e->getMessage()]]
             ], 500);
         }
+    }
+
+    //Delete produit
+    public function deleteProduit($id){
+        $user = Auth::user();
+        
+        if (!$user) {
+            return response()->json([
+                'message' => 'Utilisateur non identifié'
+            ], 401);
+        }
+        
+        $produit = Produit::find($id);
+        
+        if (!$produit) {
+            return response()->json([
+                'message' => 'Produit non trouvé'
+            ], 404);
+        }
+        
+        try {
+            // Désactiver temporairement les contraintes de clé étrangère
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+            
+            // Supprimer les mouvements de stock liés au produit
+            DB::table('mouvements_stock')->where('produit_id', $id)->delete();
+            
+            // Supprimer le stock lié au produit
+            Stock::where('produit_id', $id)->delete();
+            
+            // Supprimer le produit
+            $produit->delete();
+            
+            // Réactiver les contraintes de clé étrangère
+            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+            
+            $this->addHistorique('Suppression du produit et de son stock: ' . $produit->nom);
+            
+            return response()->json([
+                'message' => 'Produit et son stock supprimés avec succès'
+            ], 200);
+            
+        } catch (\Exception $e) {
+            // S'assurer que les contraintes sont réactivées même en cas d'erreur
+            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+            
+            return response()->json([
+                'message' => 'Erreur lors de la suppression: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    //Update produit
+    public function updateProduit(Request $request, $id){
+        $user = Auth::user();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Utilisateur non identifié'
+            ], 401);
+        }
+
+        $produit = Produit::find($id);
+        
+        if (!$produit) {
+            return response()->json([
+                'message' => 'Produit non trouvé'
+            ], 404);
+        }
+
+        $produitData = $request->all();
+        
+        // Valider les données
+        $validated = $request->validate([
+            'nom' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'prix_achat' => 'required|numeric|min:0',
+            'prix_vente' => 'required|numeric|min:0',
+            'code_barre' => 'nullable|string|max:255',
+            'date_expiration' => 'nullable|string',
+            'quantite' => 'required|integer|min:0',
+            'seuil_alerte' => 'required|integer|min:0',
+            'pharmacie_id' => 'required|integer|min:1',
+        ]);
+        
+        // Mettre à jour le produit
+        $produit->nom = $validated['nom'];
+        $produit->description = $validated['description'] ?? null;
+        $produit->prix_vente = $validated['prix_vente'];
+        $produit->code_barre = $validated['code_barre'] ?? null;
+        $produit->date_expiration = $validated['date_expiration'] ?? null;
+        
+        $produit->update();
+        
+        // Mettre à jour le stock lié au produit
+        $stock = Stock::where('produit_id', $id)->first();
+        if ($stock) {
+            $stock->quantite = $validated['quantite'];
+            $stock->seuil_alerte = $validated['seuil_alerte'];
+            $stock->prix_achat = $validated['prix_achat'];
+            $stock->update();
+        } else {
+            // Créer un nouveau stock si aucun n'existe
+            Stock::create([
+                'produit_id' => $id,
+                'quantite' => $validated['quantite'],
+                'seuil_alerte' => $validated['seuil_alerte'],
+                'prix_achat' => $validated['prix_achat'],
+                'pharmacie_id' => Auth::user()->pharmacie_id,
+            ]);
+        }
+        
+        $this->addHistorique('Modification du produit: ' . $produit->nom);
+        
+        return response()->json([
+            'message' => 'Produit mis à jour avec succès',
+            'produit' => $produit->fresh(['stock'])
+        ], 200);
     }
 
     //Liste des catégories

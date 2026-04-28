@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
 
 import 'package:pharmacie_mobile/services/api_service.dart';
 import 'dart:convert';
@@ -385,7 +389,7 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                                         color: Color(0xFF2E7D32),
                                       ),
                                     ),
-                                    const SizedBox(height: 2),
+                                    const SizedBox(height: 4),
                                     Container(
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 8,
@@ -1373,17 +1377,134 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
 
   Future<void> _savePDF(Map<String, dynamic> vente) async {
     try {
+      // Demander la permission de stockage
+      if (Platform.isAndroid) {
+        // Essayer plusieurs permissions pour Android 11+
+        var status = await Permission.storage.request();
+
+        // Si la permission storage échoue, essayer manage external storage
+        if (status != PermissionStatus.granted) {
+          status = await Permission.manageExternalStorage.request();
+        }
+
+        // Si toujours échoué, essayer photos (fallback)
+        if (status != PermissionStatus.granted) {
+          status = await Permission.photos.request();
+        }
+
+        // Debug: Afficher le statut final
+        print('Permission status final: $status');
+
+        if (status != PermissionStatus.granted) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                "Permission de stockage refusée. Statut: $status. Veuillez autoriser dans les paramètres.",
+              ),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 6),
+              action: SnackBarAction(
+                label: "Paramètres",
+                textColor: Colors.white,
+                onPressed: () {
+                  openAppSettings();
+                },
+              ),
+            ),
+          );
+          return;
+        }
+      }
+
+      // Générer le PDF
       final pdf = await _generatePdf(vente);
       final bytes = await pdf.save();
 
-      await Printing.sharePdf(
-        bytes: bytes,
-        filename: "facture_${vente['id']}.pdf",
+      // Obtenir le répertoire de sauvegarde (avec fallback)
+      Directory? saveDir;
+      String locationType = "";
+
+      if (Platform.isAndroid) {
+        // Essayer d'abord le répertoire Downloads
+        try {
+          saveDir = Directory('/storage/emulated/0/Download');
+          if (!await saveDir.exists()) {
+            await saveDir.create(recursive: true);
+          }
+          locationType = "Downloads";
+        } catch (e) {
+          // Fallback: utiliser le répertoire de l'application
+          saveDir = await getApplicationDocumentsDirectory();
+          locationType = "Documents de l'application";
+          print('Fallback to app documents: $e');
+        }
+      } else if (Platform.isIOS) {
+        saveDir = await getApplicationDocumentsDirectory();
+        locationType = "Documents";
+      } else {
+        saveDir = await getDownloadsDirectory();
+        locationType = "Downloads";
+      }
+
+      if (saveDir == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Impossible d'accéder au répertoire de sauvegarde"),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Créer un nom de fichier unique avec null safety
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final venteId = vente['id']?.toString() ?? 'unknown';
+      final fileName = 'Facture_Vente_$venteId-$timestamp.pdf';
+
+      // Vérifier que saveDir et son path ne sont pas null
+      if (saveDir?.path == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Erreur: Répertoire de sauvegarde invalide"),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final filePath = '${saveDir!.path}/$fileName';
+
+      // Sauvegarder le fichier
+      final file = File(filePath);
+      await file.writeAsBytes(bytes);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Facture sauvegardée avec succès dans $locationType: $fileName",
+          ),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(
+            label: "OK",
+            textColor: Colors.white,
+            onPressed: () {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            },
+          ),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Erreur PDF : $e"), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text("Erreur lors de la sauvegarde de la facture: $e"),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -1402,6 +1523,131 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("Erreur impression : $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  /* ==============================
+        SAVE PDF FACTURE
+  ============================== */
+
+  Future<void> _savePdfInvoice(Map<String, dynamic> vente) async {
+    try {
+      // Demander la permission de stockage
+      if (Platform.isAndroid) {
+        final status = await Permission.storage.request();
+        if (status != PermissionStatus.granted) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                "Permission de stockage requise pour sauvegarder la facture",
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+      }
+
+      // Générer le PDF
+      final pdf = await _generatePdf(vente);
+
+      // Obtenir le répertoire de téléchargement
+      Directory? downloadsDir;
+      if (Platform.isAndroid) {
+        downloadsDir = Directory('/storage/emulated/0/Download');
+      } else if (Platform.isIOS) {
+        downloadsDir = await getApplicationDocumentsDirectory();
+      } else {
+        downloadsDir = await getDownloadsDirectory();
+      }
+
+      if (downloadsDir == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Impossible d'accéder au répertoire de sauvegarde"),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Créer un nom de fichier unique
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final fileName = 'Facture_Vente_${vente['id']}_$timestamp.pdf';
+      final filePath = '${downloadsDir.path}/$fileName';
+
+      // Sauvegarder le fichier
+      final file = File(filePath);
+      await file.writeAsBytes(await pdf.save());
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Facture sauvegardée avec succès dans: $fileName"),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(
+            label: "OK",
+            textColor: Colors.white,
+            onPressed: () {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            },
+          ),
+        ),
+      );
+
+      // Optionnel: Ouvrir le fichier sauvegardé
+      // Note: Pour ouvrir automatiquement le fichier, vous pouvez utiliser le package 'open_filex'
+      // if (Platform.isAndroid) {
+      //   await OpenFilex.open(filePath);
+      // }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Erreur lors de la sauvegarde de la facture: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _sharePdfInvoice(Map<String, dynamic> vente) async {
+    try {
+      final pdf = await _generatePdf(vente);
+
+      // Utiliser file_picker pour choisir où sauvegarder
+      String? outputPath = await FilePicker.platform.saveFile(
+        dialogTitle: 'Sauvegarder la facture PDF',
+        fileName:
+            'Facture_Vente_${vente['id']}_${DateTime.now().millisecondsSinceEpoch}.pdf',
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+      );
+
+      if (outputPath != null) {
+        final file = File(outputPath);
+        await file.writeAsBytes(await pdf.save());
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Facture sauvegardée avec succès: ${file.path}"),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Erreur lors du partage de la facture: $e"),
           backgroundColor: Colors.red,
         ),
       );

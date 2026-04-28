@@ -45,5 +45,15 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>Cette application a besoin d'accéder aux documents pour sauvegarder les factures PDF</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>Cette application a besoin d'accéder au dossier de téléchargement pour sauvegarder les factures PDF</string>
+	<key>NSFileProviderDomainUsageDescription</key>
+	<string>Cette application a besoin d'accéder aux fichiers pour gérer les documents de facturation</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Cette application a besoin d'accéder à la photothèque pour enregistrer des documents</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Cette application a besoin d'accéder à la photothèque pour gérer les documents de facturation</string>
 </dict>
 </plist>

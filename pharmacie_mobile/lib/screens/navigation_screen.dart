@@ -66,7 +66,7 @@ class _MainPageState extends State<MainPage> {
                 _buildNavItem(
                   icon: Icons.inventory_outlined,
                   selectedIcon: Icons.inventory,
-                  label: 'Approvisionnements',
+                  label: 'Fourniture',
                   index: 1,
                 ),
                 _buildNavItem(

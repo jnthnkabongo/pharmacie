@@ -285,7 +285,7 @@ class _ApprovisionnementPageState extends State<ApprovisionnementPage>
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.blue.withOpacity(0.3),
+                      color: Colors.green.withOpacity(0.3),
                       blurRadius: 15,
                       offset: const Offset(0, 8),
                     ),
@@ -301,7 +301,7 @@ class _ApprovisionnementPageState extends State<ApprovisionnementPage>
                           'Approvisionnements',
                           _approvisionnements.length.toString(),
                           Icons.inventory,
-                          Colors.blue,
+                          Colors.green,
                         ),
                         _buildAnimatedStatCard(
                           'Total',
@@ -309,12 +309,12 @@ class _ApprovisionnementPageState extends State<ApprovisionnementPage>
                           Icons.attach_money,
                           Colors.green,
                         ),
-                        _buildAnimatedStatCard(
-                          'Fournisseurs',
-                          _totalFournisseurs.toString(),
-                          Icons.business,
-                          Colors.orange,
-                        ),
+                        // _buildAnimatedStatCard(
+                        //   'Fournisseurs',
+                        //   _totalFournisseurs.toString(),
+                        //   Icons.business,
+                        //   Colors.orange,
+                        // ),
                       ],
                     ),
                   ],
@@ -338,7 +338,7 @@ class _ApprovisionnementPageState extends State<ApprovisionnementPage>
                   : _filteredApprovisionnements.isEmpty
                   ? const Center(child: Text("Aucun approvisionnement trouvé"))
                   : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
                       itemCount: _filteredApprovisionnements.length,
                       itemBuilder: (context, index) {
                         final approvisionnementItem =
@@ -346,7 +346,7 @@ class _ApprovisionnementPageState extends State<ApprovisionnementPage>
                         return AnimatedContainer(
                           duration: Duration(milliseconds: 300 + (index * 100)),
                           curve: Curves.easeOut,
-                          margin: const EdgeInsets.only(bottom: 16),
+                          margin: const EdgeInsets.only(bottom: 4),
                           transform: Matrix4.translationValues(0, 0, 0),
                           child: Card(
                             elevation: 8,
@@ -364,16 +364,16 @@ class _ApprovisionnementPageState extends State<ApprovisionnementPage>
                                 ),
                               ),
                               child: ListTile(
-                                contentPadding: const EdgeInsets.all(16),
+                                contentPadding: const EdgeInsets.all(12),
                                 leading: Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: Colors.blue.withOpacity(0.1),
+                                    color: Colors.green.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Icon(
                                     Icons.inventory,
-                                    color: Colors.blue,
+                                    color: Colors.green,
                                     size: 24,
                                   ),
                                 ),
@@ -437,7 +437,7 @@ class _ApprovisionnementPageState extends State<ApprovisionnementPage>
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16,
-                                        color: Color(0xFF1976D2),
+                                        color: Color(0xFF2E7D32),
                                       ),
                                     ),
                                     const SizedBox(height: 4),
@@ -447,7 +447,7 @@ class _ApprovisionnementPageState extends State<ApprovisionnementPage>
                                         vertical: 4,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: Colors.blue,
+                                        color: Colors.green,
                                         borderRadius: BorderRadius.circular(20),
                                       ),
                                       child: Text(
@@ -482,7 +482,7 @@ class _ApprovisionnementPageState extends State<ApprovisionnementPage>
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-              color: Colors.blue.withOpacity(0.3),
+              color: Colors.green.withOpacity(0.3),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -591,7 +591,7 @@ class _ApprovisionnementPageState extends State<ApprovisionnementPage>
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1976D2),
+              backgroundColor: const Color(0xFF2E7D32),
               foregroundColor: Colors.white,
               minimumSize: const Size(100, 40),
               textStyle: const TextStyle(fontSize: 16),
@@ -626,7 +626,7 @@ class _ApprovisionnementPageState extends State<ApprovisionnementPage>
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF1976D2), Color(0xFF42A5F5)],
+                    colors: [Color(0xFF43A047), Color(0xFF2E7D32)],
                   ),
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -732,7 +732,7 @@ class _ApprovisionnementPageState extends State<ApprovisionnementPage>
                       Icons.access_time,
                     ),
                     const SizedBox(height: 8),
-                    const Divider(color: Color(0xFF1976D2)),
+                    const Divider(color: Color(0xFF2E7D32)),
                     const SizedBox(height: 8),
                     _buildDetailRow(
                       'Total',
@@ -817,13 +817,13 @@ class _ApprovisionnementPageState extends State<ApprovisionnementPage>
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: isTotal
-                  ? const Color(0xFF1976D2).withOpacity(0.1)
+                  ? const Color(0xFF2E7D32).withOpacity(0.1)
                   : Colors.grey.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               icon,
-              color: isTotal ? const Color(0xFF1976D2) : Colors.grey[600],
+              color: isTotal ? const Color(0xFF2E7D32) : Colors.grey[600],
               size: 16,
             ),
           ),
@@ -832,7 +832,7 @@ class _ApprovisionnementPageState extends State<ApprovisionnementPage>
             label,
             style: TextStyle(
               fontWeight: isTotal ? FontWeight.bold : FontWeight.w500,
-              color: isTotal ? const Color(0xFF1976D2) : Colors.grey[700],
+              color: isTotal ? const Color(0xFF2E7D32) : Colors.grey[700],
               fontSize: isTotal ? 16 : 14,
             ),
           ),
@@ -841,7 +841,7 @@ class _ApprovisionnementPageState extends State<ApprovisionnementPage>
             value,
             style: TextStyle(
               fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
-              color: isTotal ? const Color(0xFF1976D2) : Colors.black87,
+              color: isTotal ? const Color(0xFF2E7D32) : Colors.black87,
               fontSize: isTotal ? 16 : 14,
             ),
           ),
