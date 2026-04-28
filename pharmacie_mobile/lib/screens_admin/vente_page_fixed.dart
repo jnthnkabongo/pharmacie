@@ -107,7 +107,6 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
               // Ajouter chaque unité comme un produit séparé
               for (int i = 0; i < quantite; i++) {
                 productNames.add(productName);
-  
               }
             }
           }
@@ -857,12 +856,17 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
             ),
           ),
           const Spacer(),
-          Text(
-            value,
-            style: TextStyle(
-              fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
-              color: isTotal ? const Color(0xFF2E7D32) : Colors.black87,
-              fontSize: isTotal ? 16 : 14,
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontWeight: isTotal ? FontWeight.bold : FontWeight.w600,
+                color: isTotal ? const Color(0xFF2E7D32) : Colors.black87,
+                fontSize: isTotal ? 16 : 14,
+              ),
             ),
           ),
         ],
@@ -1059,28 +1063,23 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
   ============================== */
 
   Future<pw.Document> _generatePdf(Map<String, dynamic> vente) async {
-
     // Debug détaillé de la structure
     if (vente['vente_details'] != null) {
       for (int i = 0; i < (vente['vente_details'] as List).length; i++) {
         var detail = (vente['vente_details'] as List)[i];
 
         if (detail is Map && detail['produit'] != null) {
-          if (detail['produit'] is Map) {
-          }
+          if (detail['produit'] is Map) {}
         }
-
       }
     } else {
-
       // Parser les produits multiples si le champ produit contient des virgules
       String produitsStr = vente['produit']?.toString() ?? '';
 
       List<String> produitsList = [];
       if (produitsStr.contains(',')) {
         produitsList = produitsStr.split(',').map((p) => p.trim()).toList();
-        for (int i = 0; i < produitsList.length; i++) {
-        }
+        for (int i = 0; i < produitsList.length; i++) {}
       } else {
         produitsList = [produitsStr];
       }
@@ -1276,10 +1275,8 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                                   pw.SizedBox(height: 8),
                                   pw.Builder(
                                     builder: (context) {
-
                                       if (vente['prix_unitaires'] != null &&
                                           vente['prix_unitaires'].isNotEmpty) {
-
                                         Map<String, double> prixUnitaires =
                                             vente['prix_unitaires'];
 
@@ -1369,7 +1366,7 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                                             vente['quantity']?.toString() ??
                                             vente['quantite']?.toString() ??
                                             '0';
-                                        final prix =  
+                                        final prix =
                                             vente['price']?.toString() ??
                                             vente['prix_unitaire']
                                                 ?.toString() ??
@@ -1397,7 +1394,6 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                                         if (vente['vente_details'] != null) {
                                           List details = vente['vente_details'];
                                           for (var d in details) {
-
                                             // Récupérer le prix unitaire
                                             double prixUnitaire = 0;
                                             if (d['prix_unitaire'] is num) {
@@ -1437,7 +1433,6 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                                             }
                                           }
                                         } else {
-
                                           // Fallback: utiliser les produits de la chaîne et récupérer le prix unitaire depuis d'autres champs
                                           for (String produit in produits) {
                                             if (produit.isNotEmpty) {
@@ -1513,7 +1508,6 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                                         if (vente['prix_unitaires'] != null &&
                                             vente['prix_unitaires']
                                                 .isNotEmpty) {
-
                                           Map<String, double> prixUnitaires =
                                               vente['prix_unitaires'];
 
@@ -1675,7 +1669,7 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                           ),
                         ),
 
-                        //pw.Spacer(),
+                        pw.Spacer(),
 
                         // Footer
                         pw.Container(
@@ -1769,7 +1763,6 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
   ============================== */
 
   Future<void> _savePDF(Map<String, dynamic> vente) async {
-
     try {
       // Demander la permission de stockage
       if (Platform.isAndroid) {
