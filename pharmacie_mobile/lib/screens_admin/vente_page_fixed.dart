@@ -67,9 +67,7 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        print("Response: $response");
         final rawVentes = List<dynamic>.from(data['ventes'] ?? []);
-        print("Raw Ventes: $rawVentes");
         final List<Map<String, dynamic>> mappedVentes = rawVentes.map((v) {
           final clientName = v['client_id'] != null
               ? (v['client_id'].toString().isNotEmpty
@@ -81,21 +79,41 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
           List details = v['vente_details'] ?? v['venteDetails'] ?? [];
           int qty = 0;
           List<String> productNames = [];
+          Map<String, double> prixUnitaires = {};
 
           for (var d in details) {
-            qty += (d['quantite'] is num
+            int quantite = d['quantite'] is num
                 ? (d['quantite'] as num).toInt()
-                : (int.tryParse(d['quantite'].toString()) ?? 0));
+                : (int.tryParse(d['quantite'].toString()) ?? 0);
+
+            qty += quantite;
+
+            // Récupérer le prix unitaire
+            double prixUnitaire = 0;
+            if (d['prix_unitaire'] is num) {
+              prixUnitaire = (d['prix_unitaire'] as num).toDouble();
+            } else {
+              prixUnitaire =
+                  double.tryParse(d['prix_unitaire']?.toString() ?? '0') ?? 0;
+            }
 
             // Get product name if available
             if (d['produit'] != null && d['produit']['nom'] != null) {
-              productNames.add(d['produit']['nom'].toString());
+              String productName = d['produit']['nom'].toString();
+
+              // Stocker le prix unitaire pour ce produit
+              prixUnitaires[productName] = prixUnitaire;
+
+              // Ajouter chaque unité comme un produit séparé
+              for (int i = 0; i < quantite; i++) {
+                productNames.add(productName);
+  
+              }
             }
           }
 
           String productDesc = productNames.isNotEmpty
-              ? productNames.take(2).join(', ') +
-                    (productNames.length > 2 ? '...' : '')
+              ? productNames.join(', ')
               : (details.isNotEmpty
                     ? '${details.length} article(s)'
                     : 'Divers');
@@ -104,7 +122,7 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
               ? v['created_at'].toString().split('T')[0]
               : '';
 
-          return {
+          final venteTransformed = {
             'id': v['id'].toString().padLeft(3, '0'),
             'client_id': clientName,
             'produit': productDesc,
@@ -113,7 +131,11 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
             'date': dateStr,
             'status': v['type_vente'] ?? 'complété',
             'raw_amount': double.tryParse(montant.replaceAll(',', '')) ?? 0.0,
+            'prix_unitaires': prixUnitaires,
+            'vente_details': details, // Garder les détails bruts pour le PDF
           };
+
+          return venteTransformed;
         }).toList();
 
         setState(() {
@@ -720,7 +742,7 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                     _buildDetailRow('Client', vente['client_id'], Icons.person),
                     _buildDetailRow(
                       'Produit',
-                      vente['produit'],
+                      '${vente['produit']} (x${vente['quantity']})',
                       Icons.medication,
                     ),
                     _buildDetailRow(
@@ -1037,6 +1059,33 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
   ============================== */
 
   Future<pw.Document> _generatePdf(Map<String, dynamic> vente) async {
+
+    // Debug détaillé de la structure
+    if (vente['vente_details'] != null) {
+      for (int i = 0; i < (vente['vente_details'] as List).length; i++) {
+        var detail = (vente['vente_details'] as List)[i];
+
+        if (detail is Map && detail['produit'] != null) {
+          if (detail['produit'] is Map) {
+          }
+        }
+
+      }
+    } else {
+
+      // Parser les produits multiples si le champ produit contient des virgules
+      String produitsStr = vente['produit']?.toString() ?? '';
+
+      List<String> produitsList = [];
+      if (produitsStr.contains(',')) {
+        produitsList = produitsStr.split(',').map((p) => p.trim()).toList();
+        for (int i = 0; i < produitsList.length; i++) {
+        }
+      } else {
+        produitsList = [produitsStr];
+      }
+    }
+
     final pdf = pw.Document();
 
     pdf.addPage(
@@ -1059,7 +1108,7 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
               children: [
                 // Header
                 pw.Container(
-                  padding: const pw.EdgeInsets.all(40),
+                  padding: const pw.EdgeInsets.all(20),
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
@@ -1104,7 +1153,7 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                                   ),
                                 ),
                                 pw.Text(
-                                  '#${vente['id']}',
+                                  '#${vente['id']?.toString() ?? 'unknown'}',
                                   style: pw.TextStyle(
                                     fontSize: 14,
                                     color: const PdfColor.fromInt(0xFF2E7D32),
@@ -1122,7 +1171,7 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                 // Content
                 pw.Expanded(
                   child: pw.Container(
-                    padding: const pw.EdgeInsets.all(40),
+                    padding: const pw.EdgeInsets.all(20),
                     decoration: const pw.BoxDecoration(
                       color: PdfColors.white,
                       borderRadius: pw.BorderRadius.only(
@@ -1144,24 +1193,24 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                             children: [
                               _buildPdfRow(
                                 'Numéro facture',
-                                '#${vente['id']}',
+                                '#${vente['id']?.toString() ?? 'unknown'}',
                                 Icons.receipt,
                               ),
                               _buildPdfRow(
                                 'Date',
-                                vente['date'],
+                                vente['date']?.toString() ?? 'Date inconnue',
                                 Icons.access_time,
                               ),
                               _buildPdfRow(
                                 'Statut',
-                                vente['status'],
+                                vente['status']?.toString() ?? 'Inconnu',
                                 Icons.check_circle,
                               ),
                             ],
                           ),
                         ),
 
-                        pw.SizedBox(height: 24),
+                        pw.SizedBox(height: 5),
 
                         // Détails du client et produit
                         pw.Row(
@@ -1187,54 +1236,13 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                                         ),
                                       ),
                                     ),
-                                    pw.SizedBox(height: 8),
-                                    pw.Text(
-                                      vente['client'],
-                                      style: pw.TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: pw.FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            pw.SizedBox(width: 16),
-                            pw.Expanded(
-                              child: pw.Container(
-                                padding: const pw.EdgeInsets.all(24),
-                                decoration: pw.BoxDecoration(
-                                  color: PdfColor.fromInt(0xFFF5F7FA),
-                                  borderRadius: pw.BorderRadius.circular(16),
-                                ),
-                                child: pw.Column(
-                                  crossAxisAlignment:
-                                      pw.CrossAxisAlignment.start,
-                                  children: [
-                                    pw.Text(
-                                      'PRODUIT',
-                                      style: pw.TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: pw.FontWeight.bold,
-                                        color: const PdfColor.fromInt(
-                                          0xFF43A047,
-                                        ),
-                                      ),
-                                    ),
-                                    pw.SizedBox(height: 8),
-                                    pw.Text(
-                                      vente['produit'],
-                                      style: pw.TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: pw.FontWeight.bold,
-                                      ),
-                                    ),
                                     pw.SizedBox(height: 4),
                                     pw.Text(
-                                      'Quantité: ${vente['quantity']} unités',
+                                      vente['client_id']?.toString() ??
+                                          'Client inconnu',
                                       style: pw.TextStyle(
-                                        fontSize: 12,
-                                        color: PdfColors.grey,
+                                        fontSize: 16,
+                                        fontWeight: pw.FontWeight.bold,
                                       ),
                                     ),
                                   ],
@@ -1243,8 +1251,393 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                             ),
                           ],
                         ),
+                        pw.SizedBox(height: 5),
+                        pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: [
+                            pw.Container(
+                              width: double.infinity,
+                              padding: const pw.EdgeInsets.all(24),
+                              decoration: pw.BoxDecoration(
+                                color: PdfColor.fromInt(0xFFF5F7FA),
+                                borderRadius: pw.BorderRadius.circular(16),
+                              ),
+                              child: pw.Column(
+                                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                                children: [
+                                  pw.Text(
+                                    'PRODUITS VENDUS',
+                                    style: pw.TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: pw.FontWeight.bold,
+                                      color: const PdfColor.fromInt(0xFF43A047),
+                                    ),
+                                  ),
+                                  pw.SizedBox(height: 8),
+                                  pw.Builder(
+                                    builder: (context) {
 
-                        pw.SizedBox(height: 24),
+                                      if (vente['prix_unitaires'] != null &&
+                                          vente['prix_unitaires'].isNotEmpty) {
+
+                                        Map<String, double> prixUnitaires =
+                                            vente['prix_unitaires'];
+
+                                        // Récupérer les quantités depuis vente_details
+                                        Map<String, int> quantites = {};
+                                        List details =
+                                            vente['vente_details'] ?? [];
+                                        for (var d in details) {
+                                          if (d['produit'] != null &&
+                                              d['produit']['nom'] != null) {
+                                            String productName =
+                                                d['produit']['nom'].toString();
+                                            int quantite = d['quantite'] is num
+                                                ? (d['quantite'] as num).toInt()
+                                                : (int.tryParse(
+                                                        d['quantite']
+                                                            .toString(),
+                                                      ) ??
+                                                      0);
+                                            quantites[productName] = quantite;
+                                          }
+                                        }
+
+                                        return pw.Column(
+                                          crossAxisAlignment:
+                                              pw.CrossAxisAlignment.start,
+                                          children: [
+                                            for (
+                                              int i = 0;
+                                              i < prixUnitaires.keys.length;
+                                              i++
+                                            )
+                                              pw.Container(
+                                                margin:
+                                                    const pw.EdgeInsets.only(
+                                                      bottom: 4,
+                                                    ),
+                                                child: pw.Column(
+                                                  crossAxisAlignment: pw
+                                                      .CrossAxisAlignment
+                                                      .start,
+                                                  children: [
+                                                    pw.Text(
+                                                      '${i + 1}. ${prixUnitaires.keys.elementAt(i)} - ${quantites[prixUnitaires.keys.elementAt(i)] ?? 1} unité(s) - ${prixUnitaires.values.elementAt(i).toStringAsFixed(2)} FC',
+                                                      style: pw.TextStyle(
+                                                        fontSize: 14,
+                                                        fontWeight:
+                                                            pw.FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            pw.SizedBox(height: 8),
+                                            pw.Text(
+                                              'Total: ${vente['quantity'] ?? 0} article(s) - ${vente['price'] ?? '0'}',
+                                              style: pw.TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: pw.FontWeight.bold,
+                                                color: const PdfColor.fromInt(
+                                                  0xFF2E7D32,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      }
+
+                                      // Vérifier si c'est une vente simple ou multiple
+                                      final details =
+                                          vente['vente_details'] ??
+                                          vente['venteDetails'] ??
+                                          [];
+
+                                      final isSimpleSale =
+                                          details.isEmpty &&
+                                          (vente['produit'] != null ||
+                                              vente['product'] != null);
+
+                                      if (isSimpleSale) {
+                                        // Vente simple - parser la chaîne de produits
+                                        final produitsStr =
+                                            vente['produit']?.toString() ??
+                                            vente['product']?.toString() ??
+                                            'Produit inconnu';
+                                        final quantite =
+                                            vente['quantity']?.toString() ??
+                                            vente['quantite']?.toString() ??
+                                            '0';
+                                        final prix =  
+                                            vente['price']?.toString() ??
+                                            vente['prix_unitaire']
+                                                ?.toString() ??
+                                            vente['montant_total']
+                                                ?.toString() ??
+                                            '0';
+
+                                        // Parser la chaîne "aspirine, doliprane..." en liste
+                                        List<String> produits = [];
+                                        if (produitsStr.contains(',')) {
+                                          produits = produitsStr
+                                              .split(',')
+                                              .map((p) => p.trim())
+                                              .toList();
+                                        } else {
+                                          produits = [produitsStr];
+                                        }
+
+                                        // Compter les occurrences et récupérer les prix unitaires
+                                        Map<String, Map<String, dynamic>>
+                                        productInfo = {};
+
+                                        // Essayer de récupérer les prix depuis les données originales si disponibles
+
+                                        if (vente['vente_details'] != null) {
+                                          List details = vente['vente_details'];
+                                          for (var d in details) {
+
+                                            // Récupérer le prix unitaire
+                                            double prixUnitaire = 0;
+                                            if (d['prix_unitaire'] is num) {
+                                              prixUnitaire =
+                                                  (d['prix_unitaire'] as num)
+                                                      .toDouble();
+                                            } else {
+                                              prixUnitaire =
+                                                  double.tryParse(
+                                                    d['prix_unitaire']
+                                                            ?.toString() ??
+                                                        '0',
+                                                  ) ??
+                                                  0;
+                                            }
+
+                                            if (d['produit'] != null &&
+                                                d['produit']['nom'] != null) {
+                                              String productName =
+                                                  d['produit']['nom']
+                                                      .toString();
+                                              int quantite =
+                                                  d['quantite'] is num
+                                                  ? (d['quantite'] as num)
+                                                        .toInt()
+                                                  : int.tryParse(
+                                                          d['quantite']
+                                                              .toString(),
+                                                        ) ??
+                                                        0;
+
+                                              productInfo[productName] = {
+                                                'quantite': quantite,
+                                                'prix_unitaire': prixUnitaire
+                                                    .toStringAsFixed(2),
+                                              };
+                                            }
+                                          }
+                                        } else {
+
+                                          // Fallback: utiliser les produits de la chaîne et récupérer le prix unitaire depuis d'autres champs
+                                          for (String produit in produits) {
+                                            if (produit.isNotEmpty) {
+                                              if (productInfo.containsKey(
+                                                produit,
+                                              )) {
+                                                productInfo[produit]?['quantite'] =
+                                                    (productInfo[produit]?['quantite'] ??
+                                                        0) +
+                                                    1;
+                                              } else {
+                                                // Chercher le prix unitaire en brut
+                                                var prixUnitaireBrut =
+                                                    vente['prix_unitaire'];
+
+                                                productInfo[produit] = {
+                                                  'quantite': 1,
+                                                  'prix_unitaire':
+                                                      prixUnitaireBrut
+                                                          ?.toString() ??
+                                                      '0',
+                                                };
+                                              }
+                                            }
+                                          }
+                                          return pw.Column(
+                                            crossAxisAlignment:
+                                                pw.CrossAxisAlignment.start,
+                                            children: [
+                                              for (
+                                                int i = 0;
+                                                i < productInfo.keys.length;
+                                                i++
+                                              )
+                                                pw.Container(
+                                                  margin:
+                                                      const pw.EdgeInsets.only(
+                                                        bottom: 4,
+                                                      ),
+                                                  child: pw.Column(
+                                                    crossAxisAlignment: pw
+                                                        .CrossAxisAlignment
+                                                        .start,
+                                                    children: [
+                                                      pw.Text(
+                                                        '${i + 1}. ${productInfo.keys.elementAt(i)} - ${productInfo[productInfo.keys.elementAt(i)]?['quantite'] ?? 0} unité - ${productInfo[productInfo.keys.elementAt(i)]?['prix_unitaire'] ?? 0} FC/unité',
+                                                        style: pw.TextStyle(
+                                                          fontSize: 14,
+                                                          fontWeight: pw
+                                                              .FontWeight
+                                                              .bold,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              pw.SizedBox(height: 8),
+                                              pw.Text(
+                                                'Total: $quantite article(s) - $prix FC',
+                                                style: pw.TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight:
+                                                      pw.FontWeight.bold,
+                                                  color: const PdfColor.fromInt(
+                                                    0xFF2E7D32,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        }
+
+                                        if (vente['prix_unitaires'] != null &&
+                                            vente['prix_unitaires']
+                                                .isNotEmpty) {
+
+                                          Map<String, double> prixUnitaires =
+                                              vente['prix_unitaires'];
+
+                                          return pw.Column(
+                                            crossAxisAlignment:
+                                                pw.CrossAxisAlignment.start,
+                                            children: [
+                                              for (
+                                                int i = 0;
+                                                i < prixUnitaires.keys.length;
+                                                i++
+                                              )
+                                                pw.Container(
+                                                  margin:
+                                                      const pw.EdgeInsets.only(
+                                                        bottom: 4,
+                                                      ),
+                                                  child: pw.Column(
+                                                    crossAxisAlignment: pw
+                                                        .CrossAxisAlignment
+                                                        .start,
+                                                    children: [
+                                                      pw.Text(
+                                                        '${i + 1}. ${prixUnitaires.keys.elementAt(i)} - ${prixUnitaires.values.elementAt(i).toStringAsFixed(2)} FC/unité',
+                                                        style: pw.TextStyle(
+                                                          fontSize: 14,
+                                                          fontWeight: pw
+                                                              .FontWeight
+                                                              .bold,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              pw.SizedBox(height: 8),
+                                              pw.Text(
+                                                'Total: ${vente['quantity'] ?? 0} article(s) - ${vente['price'] ?? '0'}',
+                                                style: pw.TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight:
+                                                      pw.FontWeight.bold,
+                                                  color: const PdfColor.fromInt(
+                                                    0xFF2E7D32,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        }
+
+                                        if (details.isEmpty) {
+                                          return pw.Text(
+                                            'Aucun produit trouvé',
+                                            style: pw.TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: pw.FontWeight.bold,
+                                            ),
+                                          );
+                                        }
+
+                                        return pw.Column(
+                                          crossAxisAlignment:
+                                              pw.CrossAxisAlignment.start,
+                                          children: [
+                                            for (
+                                              int i = 0;
+                                              i < details.length;
+                                              i++
+                                            )
+                                              pw.Container(
+                                                margin:
+                                                    const pw.EdgeInsets.only(
+                                                      bottom: 8,
+                                                    ),
+                                                child: pw.Column(
+                                                  crossAxisAlignment: pw
+                                                      .CrossAxisAlignment
+                                                      .start,
+                                                  children: [
+                                                    pw.Text(
+                                                      '${i + 1}. ${details[i]['produit']?['nom']?.toString() ?? 'Produit supprimé'}   x${details[i]['quantite']?.toString() ?? '0'}',
+                                                      style: pw.TextStyle(
+                                                        fontSize: 14,
+                                                        fontWeight:
+                                                            pw.FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    pw.SizedBox(height: 4),
+                                                    pw.Text(
+                                                      'Prix : ${details[i]['total']?.toString() ?? '0'} FC',
+                                                      style: pw.TextStyle(
+                                                        fontSize: 13,
+                                                        fontWeight:
+                                                            pw.FontWeight.bold,
+                                                        color:
+                                                            const PdfColor.fromInt(
+                                                              0xFF2E7D32,
+                                                            ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                          ],
+                                        );
+                                      }
+
+                                      // Default fallback case
+                                      return pw.Text(
+                                        'Aucun produit disponible',
+                                        style: pw.TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: pw.FontWeight.bold,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        pw.SizedBox(height: 5),
 
                         // Total
                         pw.Container(
@@ -1271,7 +1664,7 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                                 ),
                               ),
                               pw.Text(
-                                vente['price'],
+                                vente['price']?.toString() ?? '0 FC',
                                 style: pw.TextStyle(
                                   fontSize: 24,
                                   fontWeight: pw.FontWeight.bold,
@@ -1282,7 +1675,7 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                           ),
                         ),
 
-                        pw.Spacer(),
+                        //pw.Spacer(),
 
                         // Footer
                         pw.Container(
@@ -1303,7 +1696,7 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                               ),
                               pw.SizedBox(height: 4),
                               pw.Text(
-                                'Pour toute question, contactez-nous au: +225 00 00 00 00',
+                                'Pour toute question, contactez-nous au: +243 974133780',
                                 style: pw.TextStyle(
                                   fontSize: 10,
                                   color: PdfColors.grey,
@@ -1376,6 +1769,7 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
   ============================== */
 
   Future<void> _savePDF(Map<String, dynamic> vente) async {
+
     try {
       // Demander la permission de stockage
       if (Platform.isAndroid) {
@@ -1392,9 +1786,6 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
           status = await Permission.photos.request();
         }
 
-        // Debug: Afficher le statut final
-        print('Permission status final: $status');
-
         if (status != PermissionStatus.granted) {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
@@ -1403,23 +1794,33 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
                 "Permission de stockage refusée. Statut: $status. Veuillez autoriser dans les paramètres.",
               ),
               backgroundColor: Colors.red,
-              duration: const Duration(seconds: 6),
-              action: SnackBarAction(
-                label: "Paramètres",
-                textColor: Colors.white,
-                onPressed: () {
-                  openAppSettings();
-                },
-              ),
             ),
           );
           return;
         }
       }
 
+      // Valider les données de vente
+      if (vente.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Données de vente invalides"),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       // Générer le PDF
       final pdf = await _generatePdf(vente);
-      final bytes = await pdf.save();
+
+      List<int> bytes;
+      try {
+        bytes = await pdf.save();
+      } catch (pdfError) {
+        rethrow;
+      }
 
       // Obtenir le répertoire de sauvegarde (avec fallback)
       Directory? saveDir;
@@ -1429,7 +1830,10 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
         // Essayer d'abord le répertoire Downloads
         try {
           saveDir = Directory('/storage/emulated/0/Download');
-          if (!await saveDir.exists()) {
+
+          bool exists = await saveDir.exists();
+
+          if (!exists) {
             await saveDir.create(recursive: true);
           }
           locationType = "Downloads";
@@ -1437,7 +1841,6 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
           // Fallback: utiliser le répertoire de l'application
           saveDir = await getApplicationDocumentsDirectory();
           locationType = "Documents de l'application";
-          print('Fallback to app documents: $e');
         }
       } else if (Platform.isIOS) {
         saveDir = await getApplicationDocumentsDirectory();
@@ -1458,17 +1861,18 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
         return;
       }
 
-      // Créer un nom de fichier unique avec null safety
+      // Créer un nom de fichier unique avec debug
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final venteId = vente['id']?.toString() ?? 'unknown';
-      final fileName = 'Facture_Vente_$venteId-$timestamp.pdf';
 
-      // Vérifier que saveDir et son path ne sont pas null
+      final venteId = vente['id']?.toString() ?? 'unknown';
+
+      final fileName = 'Facture_Vente_$venteId\_$timestamp.pdf';
+
       if (saveDir?.path == null) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Erreur: Répertoire de sauvegarde invalide"),
+            content: Text("Erreur: chemin du répertoire de sauvegarde null"),
             backgroundColor: Colors.red,
           ),
         );
@@ -1477,9 +1881,13 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
 
       final filePath = '${saveDir!.path}/$fileName';
 
-      // Sauvegarder le fichier
-      final file = File(filePath);
-      await file.writeAsBytes(bytes);
+      // Sauvegarder le fichier avec debug
+      try {
+        final file = File(filePath);
+        await file.writeAsBytes(bytes);
+      } catch (fileError) {
+        rethrow;
+      }
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1654,3 +2062,154 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
     }
   }
 }
+
+// {
+//     "message": "Liste des ventes",
+//     "ventes": [
+//         {
+//             "id": 10,
+//             "pharmacie_id": 1,
+//             "vendeur_id": 1,
+//             "client_id": "bedel",
+//             "montant_total": "29300.00",
+//             "mode_paiement": "cash",
+//             "type_vente": "comptant",
+//             "created_at": "2026-04-28T11:16:26.000000Z",
+//             "updated_at": "2026-04-28T11:16:26.000000Z",
+//             "client": null,
+//             "vendeur": {
+//                 "id": 1,
+//                 "name": "Jonathan kabongo",
+//                 "email": "jonathan@gmail.com",
+//                 "email_verified_at": "2026-04-23T22:08:41.000000Z",
+//                 "pharmacie_id": 1,
+//                 "role_id": 1,
+//                 "actif": true,
+//                 "created_at": "2026-04-23T22:08:41.000000Z",
+//                 "updated_at": "2026-04-23T22:08:41.000000Z"
+//             },
+//             "vente_details": [
+//                 {
+//                     "id": 21,
+//                     "vente_id": 10,
+//                     "produit_id": 29,
+//                     "quantite": 2,
+//                     "prix_unitaire": "1000.00",
+//                     "total": "2000.00",
+//                     "created_at": "2026-04-28T11:16:26.000000Z",
+//                     "updated_at": "2026-04-28T11:16:26.000000Z",
+//                     "produit": {
+//                         "id": 29,
+//                         "pharmacie_id": 1,
+//                         "categorie_id": 3,
+//                         "fournisseur_id": 1,
+//                         "nom": "aspirine",
+//                         "description": "ras",
+//                         "code_barre": "34567u",
+//                         "prix_achat": "500.00",
+//                         "prix_vente": "1000.00",
+//                         "date_expiration": "2028-04-26T00:00:00.000000Z",
+//                         "created_at": "2026-04-26T11:41:35.000000Z",
+//                         "updated_at": "2026-04-26T11:41:35.000000Z"
+//                     }
+//                 },
+//                 {
+//                     "id": 22,
+//                     "vente_id": 10,
+//                     "produit_id": 28,
+//                     "quantite": 2,
+//                     "prix_unitaire": "7000.00",
+//                     "total": "14000.00",
+//                     "created_at": "2026-04-28T11:16:26.000000Z",
+//                     "updated_at": "2026-04-28T11:16:26.000000Z",
+//                     "produit": {
+//                         "id": 28,
+//                         "pharmacie_id": 1,
+//                         "categorie_id": 2,
+//                         "fournisseur_id": 1,
+//                         "nom": "doliprane",
+//                         "description": "ras",
+//                         "code_barre": "4678383",
+//                         "prix_achat": "4500.00",
+//                         "prix_vente": "7000.00",
+//                         "date_expiration": "2027-08-26T00:00:00.000000Z",
+//                         "created_at": "2026-04-26T11:19:32.000000Z",
+//                         "updated_at": "2026-04-26T11:19:32.000000Z"
+//                     }
+//                 },
+//                 {
+//                     "id": 23,
+//                     "vente_id": 10,
+//                     "produit_id": 26,
+//                     "quantite": 2,
+//                     "prix_unitaire": "400.00",
+//                     "total": "800.00",
+//                     "created_at": "2026-04-28T11:16:26.000000Z",
+//                     "updated_at": "2026-04-28T11:16:26.000000Z",
+//                     "produit": {
+//                         "id": 26,
+//                         "pharmacie_id": 1,
+//                         "categorie_id": 2,
+//                         "fournisseur_id": 1,
+//                         "nom": "vermocine",
+//                         "description": "ras",
+//                         "code_barre": null,
+//                         "prix_achat": "300.00",
+//                         "prix_vente": "400.00",
+//                         "date_expiration": "2028-04-24T00:00:00.000000Z",
+//                         "created_at": "2026-04-25T16:06:16.000000Z",
+//                         "updated_at": "2026-04-25T16:06:16.000000Z"
+//                     }
+//                 },
+//                 {
+//                     "id": 24,
+//                     "vente_id": 10,
+//                     "produit_id": 27,
+//                     "quantite": 1,
+//                     "prix_unitaire": "500.00",
+//                     "total": "500.00",
+//                     "created_at": "2026-04-28T11:16:26.000000Z",
+//                     "updated_at": "2026-04-28T11:16:26.000000Z",
+//                     "produit": {
+//                         "id": 27,
+//                         "pharmacie_id": 1,
+//                         "categorie_id": 3,
+//                         "fournisseur_id": 1,
+//                         "nom": "sidasyl",
+//                         "description": "ras",
+//                         "code_barre": null,
+//                         "prix_achat": "200.00",
+//                         "prix_vente": "500.00",
+//                         "date_expiration": "2027-04-24T00:00:00.000000Z",
+//                         "created_at": "2026-04-25T16:06:16.000000Z",
+//                         "updated_at": "2026-04-25T16:06:16.000000Z"
+//                     }
+//                 },
+//                 {
+//                     "id": 25,
+//                     "vente_id": 10,
+//                     "produit_id": 21,
+//                     "quantite": 2,
+//                     "prix_unitaire": "6000.00",
+//                     "total": "12000.00",
+//                     "created_at": "2026-04-28T11:16:26.000000Z",
+//                     "updated_at": "2026-04-28T11:16:26.000000Z",
+//                     "produit": {
+//                         "id": 21,
+//                         "pharmacie_id": 1,
+//                         "categorie_id": 1,
+//                         "fournisseur_id": 1,
+//                         "nom": "lasix",
+//                         "description": "produit contre l'insuffissance cardiaque",
+//                         "code_barre": "2345678",
+//                         "prix_achat": "4000.00",
+//                         "prix_vente": "6000.00",
+//                         "date_expiration": "2026-04-24T00:00:00.000000Z",
+//                         "created_at": "2026-04-24T20:48:54.000000Z",
+//                         "updated_at": "2026-04-24T20:48:54.000000Z"
+//                     }
+//                 }
+//             ]
+//         },
+//     ],
+// }

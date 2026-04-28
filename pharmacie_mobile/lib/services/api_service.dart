@@ -1,26 +1,26 @@
 import 'dart:convert';
-import 'dart:io';
-import 'package:flutter/foundation.dart' show kIsWeb;
+//import 'dart:io';
+//import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  //static const String baseUrl = 'https://pharmacie.alwaysdata.net/api';
+  static const String baseUrl = 'https://pharmacie.alwaysdata.net/api';
   //static const String baseUrl = 'http://10.0.2.2:8000/api';
-  static String get baseUrl {
-    if (kIsWeb) {
-      //Web
-      return 'http://localhost:8000/api';
-    } else if (Platform.isAndroid) {
-      //Mobile Android
-      return 'http://10.0.2.2:8000/api';
-    } else if (Platform.isIOS) {
-      //Mobile Iphone
-      return 'http://127.0.0.1:8000/api';
-    }
-    // Default fallback for other platforms
-    return 'http://localhost:8000/api';
-  }
+  // static String get baseUrl {
+  //   if (kIsWeb) {
+  //     //Web
+  //     return 'http://localhost:8000/api';
+  //   } else if (Platform.isAndroid) {
+  //     //Mobile Android
+  //     return 'http://10.0.2.2:8000/api';
+  //   } else if (Platform.isIOS) {
+  //     //Mobile Iphone
+  //     return 'http://127.0.0.1:8000/api';
+  //   }
+  //   // Default fallback for other platforms
+  //   return 'http://localhost:8000/api';
+  // }
 
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_info';
