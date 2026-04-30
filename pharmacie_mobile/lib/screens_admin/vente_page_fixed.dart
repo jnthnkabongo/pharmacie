@@ -1859,9 +1859,9 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
 
       final venteId = vente['id']?.toString() ?? 'unknown';
 
-      final fileName = 'Facture_Vente_$venteId\_$timestamp.pdf';
+      final fileName = 'Facture_Vente_${venteId}_$timestamp.pdf';
 
-      if (saveDir?.path == null) {
+      if (saveDir.path == null) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -1872,7 +1872,7 @@ class _VentePageState extends State<VentePage> with TickerProviderStateMixin {
         return;
       }
 
-      final filePath = '${saveDir!.path}/$fileName';
+      final filePath = '${saveDir.path}/$fileName';
 
       // Sauvegarder le fichier avec debug
       try {

@@ -11,7 +11,7 @@ class StockPage extends StatefulWidget {
 
 class _StockPageState extends State<StockPage> with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
-  bool _isFabExpanded = false;
+  final bool _isFabExpanded = false;
   late AnimationController _animationController;
   late Animation<double> _animation;
 

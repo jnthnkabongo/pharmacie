@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:pharmacie_mobile/screens_admin/ajouter_categorie.dart';
 import 'package:pharmacie_mobile/screens_admin/ajouter_fournisseur.dart';
 import 'dart:convert';
 

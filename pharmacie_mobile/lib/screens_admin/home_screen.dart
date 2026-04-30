@@ -56,7 +56,7 @@ class _HomeScreenState extends State<HomeScreenAdmin> {
 
       appBar: AppBar(
         title: const Text(
-          'PharmaConnect',
+          'Pharma Connect',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         backgroundColor: const Color(0xFF2E7D32),
@@ -121,7 +121,7 @@ class _HomeScreenState extends State<HomeScreenAdmin> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Carte de bienvenue
-                    SizedBox(height: 20),
+                    SizedBox(height: 10),
                     Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
@@ -306,7 +306,7 @@ class _HomeScreenState extends State<HomeScreenAdmin> {
                           'Fournisseurs',
                           Icons.people_sharp,
                           const Color.fromARGB(255, 103, 164, 5),
-                          '${_dashInfo?['fournisseurQuantite']?.toString() ?? '0'}',
+                          _dashInfo?['fournisseurQuantite']?.toString() ?? '0',
                           onTap: () {
                             // TODO: Navigation vers rapports
                           },

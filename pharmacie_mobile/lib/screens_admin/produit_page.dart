@@ -13,7 +13,7 @@ class ProduitPage extends StatefulWidget {
 class _ProduitPageState extends State<ProduitPage>
     with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
-  bool _isFabExpanded = false;
+  final bool _isFabExpanded = false;
   late AnimationController _animationController;
   late Animation<double> _animation;
 
@@ -326,37 +326,37 @@ class _ProduitPageState extends State<ProduitPage>
     BuildContext context,
     Map<String, dynamic> product,
   ) {
-    final _nomController = TextEditingController(
+    final nomController = TextEditingController(
       text: product['nom']?.toString() ?? '',
     );
-    final _descriptionController = TextEditingController(
+    final descriptionController = TextEditingController(
       text: product['description']?.toString() ?? '',
     );
-    final _prixAchatController = TextEditingController(
+    final prixAchatController = TextEditingController(
       text: product['prix_achat']?.toString() ?? '',
     );
-    final _prixVenteController = TextEditingController(
+    final prixVenteController = TextEditingController(
       text: product['prix_vente']?.toString() ?? '',
     );
-    final _codeBarreController = TextEditingController(
+    final codeBarreController = TextEditingController(
       text: product['code_barre']?.toString() ?? '',
     );
-    final _dateExpirationController = TextEditingController(
+    final dateExpirationController = TextEditingController(
       text: _formatDate(product['date_expiration']),
     );
     print('📦 Produit complet: $product');
     print('📊 Stock brut: ${product['stock']}');
     print('📅 Date expiration brute: ${product['date_expiration']}');
 
-    final _stockController = TextEditingController(
+    final stockController = TextEditingController(
       text: product['stock']?['quantite']?.toString() ?? '0',
     );
-    final _seuilAlerteController = TextEditingController(
+    final seuilAlerteController = TextEditingController(
       text: product['seuil_alerte']?.toString() ?? '10',
     );
 
-    print('📦 Stock controller: "${_stockController.text}"');
-    print('📅 Date controller: "${_dateExpirationController.text}"');
+    print('📦 Stock controller: "${stockController.text}"');
+    print('📅 Date controller: "${dateExpirationController.text}"');
 
     showModalBottomSheet(
       context: context,
@@ -396,7 +396,7 @@ class _ProduitPageState extends State<ProduitPage>
               const SizedBox(height: 10),
 
               TextFormField(
-                controller: _nomController,
+                controller: nomController,
                 decoration: const InputDecoration(
                   labelText: 'Nom du produit *',
                   prefixIcon: Icon(Icons.medication),
@@ -406,7 +406,7 @@ class _ProduitPageState extends State<ProduitPage>
               const SizedBox(height: 10),
 
               TextFormField(
-                controller: _descriptionController,
+                controller: descriptionController,
                 decoration: const InputDecoration(
                   labelText: 'Description',
                   prefixIcon: Icon(Icons.description),
@@ -420,7 +420,7 @@ class _ProduitPageState extends State<ProduitPage>
                 children: [
                   Expanded(
                     child: TextFormField(
-                      controller: _prixAchatController,
+                      controller: prixAchatController,
                       decoration: const InputDecoration(
                         labelText: 'Prix d\'achat (FC)',
                         prefixIcon: Icon(Icons.shopping_cart),
@@ -432,7 +432,7 @@ class _ProduitPageState extends State<ProduitPage>
                   const SizedBox(width: 10),
                   Expanded(
                     child: TextFormField(
-                      controller: _prixVenteController,
+                      controller: prixVenteController,
                       decoration: const InputDecoration(
                         labelText: 'Prix de vente (FC)',
                         prefixIcon: Icon(Icons.payment),
@@ -449,7 +449,7 @@ class _ProduitPageState extends State<ProduitPage>
                 children: [
                   Expanded(
                     child: TextFormField(
-                      controller: _stockController,
+                      controller: stockController,
                       decoration: const InputDecoration(
                         labelText: 'Quantité en stock',
                         prefixIcon: Icon(Icons.inventory),
@@ -461,7 +461,7 @@ class _ProduitPageState extends State<ProduitPage>
                   const SizedBox(width: 10),
                   Expanded(
                     child: TextFormField(
-                      controller: _seuilAlerteController,
+                      controller: seuilAlerteController,
                       decoration: const InputDecoration(
                         labelText: 'Seuil d\'alerte',
                         prefixIcon: Icon(Icons.warning),
@@ -475,7 +475,7 @@ class _ProduitPageState extends State<ProduitPage>
               const SizedBox(height: 10),
 
               TextFormField(
-                controller: _codeBarreController,
+                controller: codeBarreController,
                 decoration: const InputDecoration(
                   labelText: 'Code barre',
                   prefixIcon: Icon(Icons.qr_code),
@@ -485,7 +485,7 @@ class _ProduitPageState extends State<ProduitPage>
               const SizedBox(height: 10),
 
               TextFormField(
-                controller: _dateExpirationController,
+                controller: dateExpirationController,
                 decoration: const InputDecoration(
                   labelText: 'Date d\'expiration',
                   prefixIcon: Icon(Icons.calendar_today),
@@ -500,7 +500,7 @@ class _ProduitPageState extends State<ProduitPage>
                     lastDate: DateTime(2030),
                   );
                   if (date != null) {
-                    _dateExpirationController.text =
+                    dateExpirationController.text =
                         '${date.day.toString().padLeft(2, '0')}-${date.month.toString().padLeft(2, '0')}-${date.year}';
                   }
                 },
@@ -526,7 +526,7 @@ class _ProduitPageState extends State<ProduitPage>
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
-                        if (_nomController.text.trim().isEmpty) {
+                        if (nomController.text.trim().isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Le nom du produit est requis'),
@@ -540,15 +540,15 @@ class _ProduitPageState extends State<ProduitPage>
                           final response = await ApiService.updateProduit(
                             product['id'].toString(),
                             {
-                              'nom': _nomController.text.trim(),
-                              'description': _descriptionController.text.trim(),
-                              'prix_achat': _prixAchatController.text.trim(),
-                              'prix_vente': _prixVenteController.text.trim(),
-                              'code_barre': _codeBarreController.text.trim(),
-                              'date_expiration': _dateExpirationController.text
+                              'nom': nomController.text.trim(),
+                              'description': descriptionController.text.trim(),
+                              'prix_achat': prixAchatController.text.trim(),
+                              'prix_vente': prixVenteController.text.trim(),
+                              'code_barre': codeBarreController.text.trim(),
+                              'date_expiration': dateExpirationController.text
                                   .trim(),
-                              'quantite': _stockController.text.trim(),
-                              'seuil_alerte': _seuilAlerteController.text
+                              'quantite': stockController.text.trim(),
+                              'seuil_alerte': seuilAlerteController.text
                                   .trim(),
                             },
                           );

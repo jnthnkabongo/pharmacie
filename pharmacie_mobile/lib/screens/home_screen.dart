@@ -165,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Bienvenue,',
+                                        'Bienvenue,vendeur',
                                         style: TextStyle(
                                           color: Colors.white.withOpacity(0.9),
                                           fontSize: 14,
@@ -287,7 +287,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           'Approvionnement en attente',
                           Icons.production_quantity_limits_sharp,
                           const Color.fromARGB(255, 3, 28, 119),
-                          '${_dashInfo?['sommeApprovionnement']?.toString() ?? '0'}',
+                          _dashInfo?['sommeApprovionnement']?.toString() ?? '0',
                           onTap: () {
                             // TODO: Navigation vers gestion clients
                           },
@@ -297,7 +297,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           'Fournisseurs',
                           Icons.people_sharp,
                           const Color.fromARGB(255, 103, 164, 5),
-                          '${_dashInfo?['fournisseurQuantite']?.toString() ?? '0'}',
+                          _dashInfo?['fournisseurQuantite']?.toString() ?? '0',
                           onTap: () {
                             // TODO: Navigation vers rapports
                           },
